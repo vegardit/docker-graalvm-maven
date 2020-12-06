@@ -38,6 +38,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-trivy-
 
+    - name: Cache local Maven repository
+      uses: actions/cache@v2
+      with:
+        path: /tmp/maven-repo
+        key: ${{ runner.os }}-mvnrepo-${{ hashFiles('example/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-mvnrepo-
+
     - name: Install dos2unix
       run: sudo apt-get install --no-install-recommends -y dos2unix
 
