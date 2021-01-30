@@ -18,13 +18,16 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
         - GRAALVM_VERSION: release
+          experimental: false
         - GRAALVM_VERSION: latest
+          experimental: true
 
     steps:
     - name: Git Checkout
