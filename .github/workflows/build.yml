@@ -20,10 +20,11 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         include:
-        - GRAALVM_VERSION: latest
         - GRAALVM_VERSION: release
+        - GRAALVM_VERSION: latest
 
     steps:
     - name: Git Checkout
