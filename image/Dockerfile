@@ -99,7 +99,8 @@ RUN \
     --exclude=*/lib/src.zip \
     --exclude=*/lib/visualvm \
     && \
-  /opt/graalvm/bin/gu install native-image && \
+  # --jvm is workaround for https://github.com/oracle/graal/issues/3173
+  /opt/graalvm/bin/gu --jvm install native-image && \
   strip --strip-unneeded \
     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
     /opt/graalvm/bin/unpack200 \
