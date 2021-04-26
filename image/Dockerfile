@@ -102,16 +102,18 @@ RUN \
   # --jvm is workaround for https://github.com/oracle/graal/issues/3173
   /opt/graalvm/bin/gu --jvm install native-image && \
   strip --strip-unneeded \
-    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
     /opt/graalvm/bin/unpack200 \
-    /opt/graalvm/languages/js/bin/node \
+    /opt/graalvm/languages/js/bin/js \
     /opt/graalvm/languages/llvm/bin/lli \
+    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+    /opt/graalvm/lib/installer/bin/gu \
     /opt/graalvm/lib/svm/bin/native-image && \
   if [[ $UPX_COMPRESS == "true" ]]; then /opt/upx/upx -9 \
-    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
-    #/opt/graalvm/bin/unpack200 \
-    /opt/graalvm/languages/js/bin/node \
+    # /opt/graalvm/bin/unpack200 \
+    # /opt/graalvm/languages/js/bin/js \
     /opt/graalvm/languages/llvm/bin/lli \
+    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+    /opt/graalvm/lib/installer/bin/gu \
     /opt/graalvm/lib/svm/bin/native-image ;\
   fi && \
   export JAVA_VERSION=$(java -fullversion 2>&1 | sed -E -n 's/.* version "([^.-]*).*"/\1/p') && \
