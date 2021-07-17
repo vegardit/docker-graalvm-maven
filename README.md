@@ -4,7 +4,6 @@
 [![License](https://img.shields.io/github/license/vegardit/docker-graalvm-maven.svg?label=license)](#license)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vegardit/graalvm-maven.svg)](https://hub.docker.com/r/vegardit/graalvm-maven)
 [![Docker Stars](https://img.shields.io/docker/stars/vegardit/graalvm-maven.svg)](https://hub.docker.com/r/vegardit/graalvm-maven)
-[![Docker Image Size](https://images.microbadger.com/badges/image/vegardit/graalvm-maven.svg)](https://hub.docker.com/r/vegardit/graalvm-maven)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 1. [What is it?](#what-is-it)

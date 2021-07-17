@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2020 by Vegard IT GmbH, Germany, https://vegardit.com
+# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -17,7 +17,26 @@ if [ -z "${BASH_VERSINFO:-}" ]; then /usr/bin/env bash "$0" "$@"; exit; fi
 
 set -o pipefail
 
-trap 'echo >&2 "$(date +%H:%M:%S) Error - exited with status $? at line $LINENO:"; pr -tn $0 | tail -n+$((LINENO - 3)) | head -n7' ERR
+
+#################################################
+# install debug traps
+#################################################
+trap 'rc=$?; echo >&2 "$(date +%H:%M:%S) Error - exited with status $rc in [$BASH_SOURCE] at line $LINENO:"; cat -n $BASH_SOURCE | tail -n+$((LINENO - 3)) | head -n7' ERR
+
+if [[ "${DEBUG:-}" == "1" ]]; then
+  if [[ $- =~ x ]]; then
+    # "set -x" was specified already, we only improve the PS4 in this case
+    PS4='+\033[90m[$?] $BASH_SOURCE:$LINENO ${FUNCNAME[0]}()\033[0m '
+  else
+    # "set -x" was not specified, we use a DEBUG trap for better debug output
+    set -T
+
+    __print_debug_statement() {
+      printf "\e[90m#[$?] $BASH_SOURCE:$1 ${FUNCNAME[1]}() %*s\e[35m$BASH_COMMAND\e[m\n" "$(( 2 * ($BASH_SUBSHELL + ${#FUNCNAME[*]} - 2) ))" >&2
+    }
+    trap '__print_debug_statement $LINENO' DEBUG
+  fi
+fi
 
 
 #################################################
@@ -72,37 +91,50 @@ if [[ $OSTYPE == "cygwin" || $OSTYPE == "msys" ]]; then
 fi
 
 docker build "$project_root/image" \
-   --pull \
-   `# using the current date as value for BASE_LAYER_CACHE_KEY, i.e. the base layer cache (that holds system packages with security updates) will be invalidate once per day` \
-   --build-arg BASE_LAYER_CACHE_KEY=$base_layer_cache_key \
-   --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
-   --build-arg GRAALVM_DOWNLOAD_URL="$graalvm_url" \
-   --build-arg JAVA_MAJOR_VERSION="$java_major_version" \
-   --build-arg UPX_COMPRESS="${UPX_COMPRESS:-true}" \
-   --build-arg GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}" \
-   --build-arg GIT_COMMIT_DATE="$(date -d @$(git log -1 --format='%at') --utc +'%Y-%m-%d %H:%M:%S UTC')" \
-   --build-arg GIT_COMMIT_HASH="$(git rev-parse --short HEAD)" \
-   --build-arg GIT_REPO_URL="$(git config --get remote.origin.url)" \
-   -t $image_name \
-   "$@"
+  --progress=plain \
+  --pull \
+  `# using the current date as value for BASE_LAYER_CACHE_KEY, i.e. the base layer cache (that holds system packages with security updates) will be invalidate once per day` \
+  --build-arg BASE_LAYER_CACHE_KEY=$base_layer_cache_key \
+  --build-arg BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ") \
+  --build-arg GRAALVM_DOWNLOAD_URL="$graalvm_url" \
+  --build-arg JAVA_MAJOR_VERSION="$java_major_version" \
+  --build-arg UPX_COMPRESS="${UPX_COMPRESS:-true}" \
+  --build-arg GIT_BRANCH="${GIT_BRANCH:-$(git rev-parse --abbrev-ref HEAD)}" \
+  --build-arg GIT_COMMIT_DATE="$(date -d @$(git log -1 --format='%at') --utc +'%Y-%m-%d %H:%M:%S UTC')" \
+  --build-arg GIT_COMMIT_HASH="$(git rev-parse --short HEAD)" \
+  --build-arg GIT_REPO_URL="$(git config --get remote.origin.url)" \
+  -t $image_name \
+  "$@"
 
 
 #################################################
 # perform security audit using https://github.com/aquasecurity/trivy
 #################################################
 if [[ $OSTYPE != cygwin ]] && [[ $OSTYPE != msys ]]; then
-   trivy_cache_dir="${TRIVY_CACHE_DIR:-$HOME/.trivy/cache}"
-   trivy_cache_dir="${trivy_cache_dir/#\~/$HOME}"
-   mkdir -p "$trivy_cache_dir"
-   docker run --rm \
-      -v /var/run/docker.sock:/var/run/docker.sock:ro \
-      -v "$trivy_cache_dir:/root/.cache/" \
-      aquasec/trivy --no-progress --exit-code 0 --severity HIGH,CRITICAL $image_name
-   docker run --rm \
-      -v /var/run/docker.sock:/var/run/docker.sock:ro \
-      -v "$trivy_cache_dir:/root/.cache/" \
-      aquasec/trivy --no-progress --ignore-unfixed --exit-code 1 --severity HIGH,CRITICAL $image_name
-   sudo chown -R $USER:$(id -gn) "$trivy_cache_dir" || true
+  trivy_cache_dir="${TRIVY_CACHE_DIR:-$HOME/.trivy/cache}"
+  trivy_cache_dir="${trivy_cache_dir/#\~/$HOME}"
+  mkdir -p "$trivy_cache_dir"
+
+  docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -v "$trivy_cache_dir:/root/.cache/" \
+    aquasec/trivy --no-progress \
+      --severity HIGH,CRITICAL \
+      --exit-code 0 \
+      $image_name
+
+  docker run --rm \
+    -v /var/run/docker.sock:/var/run/docker.sock:ro \
+    -v "$project_root/.trivyignore":/.trivyignore \
+    -v "$trivy_cache_dir:/root/.cache/" \
+    aquasec/trivy --no-progress \
+      --severity HIGH,CRITICAL \
+      --ignore-unfixed \
+      --ignorefile /.trivyignore \
+      --exit-code 1 \
+      $image_name
+
+  sudo chown -R $USER:$(id -gn) "$trivy_cache_dir" || true
 fi
 
 
@@ -110,8 +142,8 @@ fi
 # push image with tags to remote docker image registry
 #################################################
 if [[ "${DOCKER_PUSH:-0}" == "1" ]]; then
-   docker image tag $image_name $docker_registry/$image_name
-   docker push $docker_registry/$image_name
+  docker image tag $image_name $docker_registry/$image_name
+  docker push $docker_registry/$image_name
 fi
 
 
