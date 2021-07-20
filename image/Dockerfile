@@ -1,4 +1,5 @@
-# Copyright 2020 by Vegard IT GmbH, Germany, https://vegardit.com
+#syntax=docker/dockerfile:1.2
+# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -22,15 +23,9 @@ ARG LC_ALL=C
 
 ARG BASE_LAYER_CACHE_KEY
 
-RUN \
+RUN --mount=type=bind,source=.shared,target=/mnt/shared \
   set -eu && \
-  echo "#################################################" && \
-  echo "Installing OS updates..." && \
-  echo "#################################################" && \
-  apt-get update -y && \
-  # https://github.com/phusion/baseimage-docker/issues/319
-  apt-get install --no-install-recommends -y apt-utils 2> >( grep -v 'debconf: delaying package configuration, since apt-utils is not installed' >&2 ) && \
-  apt-get upgrade -y && \
+  /mnt/shared/cmd/debian-install-os-updates.sh && \
   #
   echo "#################################################" && \
   echo "Installing tools..." && \
@@ -41,27 +36,14 @@ set showmatch\n\
 set novisualbell\n\
 set noerrorbells\n\
 syntax enable\n\
-set mouse-=a' > ~/.vimrc; \
+set mouse-=a' > ~/.vimrc && \
   #
   echo "#################################################" && \
   echo "Installing packages required by GraalVM..." && \
   echo "#################################################" && \
   apt-get install --no-install-recommends -y gcc libz-dev && \
   #
-  echo "#################################################" && \
-  echo "apt-get clean up..." && \
-  echo "#################################################" && \
-  apt-get remove apt-utils -y && \
-  apt-get clean autoclean && \
-  apt-get autoremove --purge -y && \
-  #
-  echo "#################################################" && \
-  echo "Removing logs, caches and temp files..." && \
-  echo "#################################################" && \
-  rm -rf /var/cache/{apt,debconf} \
-    /var/lib/apt/lists/* \
-    /var/log/{apt,alternatives.log,bootstrap.log,dpkg.log} \
-    /tmp/* /var/tmp/*
+  /mnt/shared/cmd/debian-cleanup.sh
 
 ARG GRAALVM_DOWNLOAD_URL
 ARG JAVA_MAJOR_VERSION
@@ -74,10 +56,10 @@ ARG GIT_COMMIT_DATE
 ARG GIT_REPO_URL
 
 LABEL \
-  org.label-schema.schema-version="1.0" \
-  org.label-schema.build-date=$BUILD_DATE \
-  org.label-schema.vcs-ref=$GIT_COMMIT_HASH \
-  org.label-schema.vcs-url=$GIT_REPO_URL
+ org.label-schema.schema-version="1.0" \
+ org.label-schema.build-date=$BUILD_DATE \
+ org.label-schema.vcs-ref=$GIT_COMMIT_HASH \
+ org.label-schema.vcs-url=$GIT_REPO_URL
 
 RUN \
   set -eu && \
@@ -95,26 +77,26 @@ RUN \
   mkdir /opt/graalvm && \
   echo "Downloading [$GRAALVM_DOWNLOAD_URL]..." && \
   curl -fL "$GRAALVM_DOWNLOAD_URL" | tar zxv -C /opt/graalvm --strip-components=1 \
-    --exclude=*/bin/jvisualvm \
-    --exclude=*/lib/src.zip \
-    --exclude=*/lib/visualvm \
-    && \
+     --exclude=*/bin/jvisualvm \
+     --exclude=*/lib/src.zip \
+     --exclude=*/lib/visualvm \
+     && \
   # --jvm is workaround for https://github.com/oracle/graal/issues/3173
   /opt/graalvm/bin/gu --jvm install native-image && \
   strip --strip-unneeded \
-    /opt/graalvm/bin/unpack200 \
-    /opt/graalvm/languages/js/bin/js \
-    /opt/graalvm/languages/llvm/bin/lli \
-    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
-    /opt/graalvm/lib/installer/bin/gu \
-    /opt/graalvm/lib/svm/bin/native-image && \
+     /opt/graalvm/bin/unpack200 \
+     /opt/graalvm/languages/js/bin/js \
+     /opt/graalvm/languages/llvm/bin/lli \
+     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+     /opt/graalvm/lib/installer/bin/gu \
+     /opt/graalvm/lib/svm/bin/native-image && \
   if [[ $UPX_COMPRESS == "true" ]]; then /opt/upx/upx -9 \
-    # /opt/graalvm/bin/unpack200 \
-    # /opt/graalvm/languages/js/bin/js \
-    /opt/graalvm/languages/llvm/bin/lli \
-    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
-    /opt/graalvm/lib/installer/bin/gu \
-    /opt/graalvm/lib/svm/bin/native-image ;\
+     #/opt/graalvm/bin/unpack200 \
+     #/opt/graalvm/languages/js/bin/js \
+     /opt/graalvm/languages/llvm/bin/lli \
+     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+     /opt/graalvm/lib/installer/bin/gu \
+     /opt/graalvm/lib/svm/bin/native-image ;\
   fi && \
   export JAVA_VERSION=$(java -fullversion 2>&1 | sed -E -n 's/.* version "([^.-]*).*"/\1/p') && \
   #
@@ -152,22 +134,24 @@ RUN \
   echo "source /opt/bash-funk/bash-funk.sh" >> ~/.bashrc && \
   #
   echo "#################################################" && \
-  echo -e "GIT_REPO:    $GIT_REPO_URL\n\
+  echo -e "\
+GIT_REPO:    $GIT_REPO_URL\n\
 GIT_BRANCH:  $GIT_BRANCH\n\
 GIT_COMMIT:  $GIT_COMMIT_HASH @ $GIT_COMMIT_DATE\n\
-IMAGE_BUILD: $BUILD_DATE\n" > /opt/build_info && \
+IMAGE_BUILD: $BUILD_DATE\n" >/opt/build_info && \
   cat /opt/build_info
 
-COPY settings.xml /root/.m2/settings.xml
-COPY toolchains.xml /root/.m2/toolchains.xml
+COPY image/settings.xml /root/.m2/settings.xml
+COPY image/toolchains.xml /root/.m2/toolchains.xml
 
-ENV PATH="/opt/graalvm/bin:/opt/maven/bin:/opt/upx:${PATH}"
-ENV JAVA_HOME=/opt/graalvm
-ENV JAVA_MAJOR_VERSION=${JAVA_MAJOR_VERSION}
-ENV MAVEN_HOME /opt/maven
-ENV M2_HOME /opt/maven
-ENV MAVEN_CONFIG "/root/.m2"
-ENV MAVEN_OPTS "-Xmx1024m -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Dfile.encoding=UTF-8"
+ENV \
+  PATH="/opt/graalvm/bin:/opt/maven/bin:/opt/upx:${PATH}" \
+  JAVA_HOME=/opt/graalvm \
+  JAVA_MAJOR_VERSION=${JAVA_MAJOR_VERSION} \
+  MAVEN_HOME=/opt/maven \
+  M2_HOME=/opt/maven \
+  MAVEN_CONFIG="/root/.m2" \
+  MAVEN_OPTS="-Xmx1024m -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Dfile.encoding=UTF-8"
 
 CMD "/bin/sh" "-c" "cat /opt/build_info && java --version && echo && mvn --version"
 

@@ -1,8 +1,6 @@
 # Local work folder that is not checked in
 _LOCAL/
 
-.shared
-
 # Eclipse
 .apt_generated/
 .checkstyle
@@ -12,16 +10,6 @@ _LOCAL/
 .settings/
 bin/
 **/.*.md.html
-
-# Maven
-target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
 
 # IntelliJ
 .idea

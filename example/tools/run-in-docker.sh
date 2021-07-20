@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2020 by Vegard IT GmbH, Germany, https://vegardit.com
+# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -13,6 +13,28 @@ set -eu
 if [ -z "${BASH_VERSINFO:-}" ]; then /usr/bin/env bash "$0" "$@"; exit; fi
 
 set -o pipefail
+
+
+#################################################
+# install debug traps
+#################################################
+trap 'rc=$?; echo >&2 "$(date +%H:%M:%S) Error - exited with status $rc in [$BASH_SOURCE] at line $LINENO:"; cat -n $BASH_SOURCE | tail -n+$((LINENO - 3)) | head -n7' ERR
+
+if [[ "${DEBUG:-}" == "1" ]]; then
+  if [[ $- =~ x ]]; then
+    # "set -x" was specified already, we only improve the PS4 in this case
+    PS4='+\033[90m[$?] $BASH_SOURCE:$LINENO ${FUNCNAME[0]}()\033[0m '
+  else
+    # "set -x" was not specified, we use a DEBUG trap for better debug output
+    set -T
+
+    __print_debug_statement() {
+      printf "\e[90m#[$?] $BASH_SOURCE:$1 ${FUNCNAME[1]}() %*s\e[35m$BASH_COMMAND\e[m\n" "$(( 2 * ($BASH_SUBSHELL + ${#FUNCNAME[*]} - 2) ))" >&2
+    }
+    trap '__print_debug_statement $LINENO' DEBUG
+  fi
+fi
+
 
 function printHelp() {
   echo "Usage: $(basename ${BASH_SOURCE[0]}) command [args]..."

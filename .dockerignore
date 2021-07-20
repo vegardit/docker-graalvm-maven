@@ -1,4 +1,7 @@
-.gitub
-example
 *.md
 *.txt
+.github/
+.shared/.*
+.shared/*.md
+.shared/*.txt
+example
