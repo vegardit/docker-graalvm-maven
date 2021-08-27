@@ -7,8 +7,8 @@
 # https://github.com/vegardit/docker-graalvm-maven
 #
 
-# https://hub.docker.com/_/debian?tab=tags&name=buster-slim
-ARG BASE_IMAGE=debian:buster-slim
+# https://hub.docker.com/_/debian?tab=tags&name=stable-slim
+ARG BASE_IMAGE=debian:stable-slim
 
 FROM ${BASE_IMAGE}
 
@@ -108,8 +108,8 @@ RUN \
   echo "Downloading [$docker_cli_download_url]..." && \
   curl -fL $docker_cli_download_url | tar zxv -C /usr/bin --strip-components=1 docker/docker && \
   # this also installs docker app and docker buildx:
-  #docker_cli_package=$(curl -fsSL https://download.docker.com/linux/debian/dists/buster/pool/stable/amd64/ | grep docker-ce-cli | grep buster_amd64 | tail -1 | grep -oP '(?<=deb">).*(?=</a>)') && \
-  #docker_cli_download_url=https://download.docker.com/linux/debian/dists/buster/pool/stable/amd64/$docker_cli_package && \
+  #docker_cli_package=$(curl -fsSL https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/ | grep docker-ce-cli | grep buster_amd64 | tail -1 | grep -oP '(?<=deb">).*(?=</a>)') && \
+  #docker_cli_download_url=https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/$docker_cli_package && \
   #echo "Downloading [$docker_cli_download_url]..." && \
   #curl -fL $docker_cli_download_url -o /tmp/docker-cli.deb && \
   #dpkg -i /tmp/docker-cli.deb && \
