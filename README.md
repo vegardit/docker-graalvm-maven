@@ -1,4 +1,4 @@
-# docker-graalvm-maven
+# docker-graalvm-maven <a href="https://github.com/vegardit/docker-graalvm-maven/" title="GitHub Repo"><img height="30" src="https://raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/github.svg?sanitize=true"></a>
 
 [![Build Status](https://github.com/vegardit/docker-graalvm-maven/workflows/Build/badge.svg "GitHub Actions")](https://github.com/vegardit/docker-graalvm-maven/actions?query=workflow%3ABuild)
 [![License](https://img.shields.io/github/license/vegardit/docker-graalvm-maven.svg?label=license)](#license)
