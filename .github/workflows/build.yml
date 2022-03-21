@@ -45,7 +45,7 @@ jobs:
       uses: actions/checkout@v3 #https://github.com/actions/checkout
 
     - name: Cache trivy cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ${{ env.TRIVY_CACHE_DIR }}
         # https://github.com/actions/cache/issues/342#issuecomment-673371329
@@ -54,7 +54,7 @@ jobs:
           ${{ runner.os }}-trivy-
 
     - name: Cache local Maven repository
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: /tmp/maven-repo
         key: ${{ runner.os }}-mvnrepo-${{ hashFiles('example/pom.xml') }}
