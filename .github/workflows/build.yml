@@ -86,5 +86,25 @@ jobs:
       env:
         DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
       run: |
+        docker run --rm -t vegardit/graalvm-maven:release /bin/bash -c "
+          cd /tmp
+          echo 'class HelloWorld { public static void main(String[] args) { System.out.println(\"HelloWorld!\"); }}' > HelloWorld.java
+          javac HelloWorld.java
+
+          # test dynamic executable
+          native-image HelloWorld
+          ./helloworld
+
+          # test static executable
+          native-image --static HelloWorld
+          ./helloworld
+        "
+
+    - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }} via Maven
+      shell: bash
+      env:
+        DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
+      run: |
         bash example/tools/run-in-docker.sh mvn clean package
         bash example/tools/run-in-docker.sh bash -c target/example
+        
