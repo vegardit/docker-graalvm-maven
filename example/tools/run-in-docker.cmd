@@ -29,7 +29,7 @@ if "%1"=="/?" (
 )
 
 if [%RUN_IN_DOCKER_IMAGE%]==[] (
-  set RUN_IN_DOCKER_IMAGE=vegardit/graalvm-maven:release
+  set RUN_IN_DOCKER_IMAGE=vegardit/graalvm-maven:latest-java11
 )
 
 setlocal enabledelayedexpansion

@@ -55,7 +55,7 @@ if [ "$1" == "--help" ]; then
   exit 0
 fi
 
-export RUN_IN_DOCKER_IMAGE=${RUN_IN_DOCKER_IMAGE:-vegardit/graalvm-maven:release}
+export RUN_IN_DOCKER_IMAGE=${RUN_IN_DOCKER_IMAGE:-vegardit/graalvm-maven:latest-java11}
 
 project_root=$(readlink -e "$(dirname ${BASH_SOURCE[0]})/..")
 project_name=$(basename "$project_root")

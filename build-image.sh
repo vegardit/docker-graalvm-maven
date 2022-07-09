@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
+# Copyright 2020-2022 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -16,11 +16,11 @@ source "$shared_lib/lib/build-image-init.sh"
 #################################################
 # specify target docker registry/repo
 #################################################
-graalvm_version=${GRAALVM_VERSION:-release}
-java_major_version=${GRAAVM_JAVA_VERSION:-11}
+graalvm_version=${GRAALVM_VERSION:-latest}
+java_major_version=${GRAALVM_JAVA_VERSION:-11}
 docker_registry=${DOCKER_REGISTRY:-docker.io}
 image_repo=${DOCKER_IMAGE_REPO:-vegardit/graalvm-maven}
-image_tag=${DOCKER_IMAGE_TAG:-$graalvm_version}
+image_tag=${DOCKER_IMAGE_TAG:-$graalvm_version-java$java_major_version}
 image_name=$image_repo:$image_tag
 
 
@@ -28,10 +28,10 @@ image_name=$image_repo:$image_tag
 # determine GraalVM download URL
 #################################################
 case $graalvm_version in \
-   latest)  graalvm_version=$(curl -sS https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases/latest | grep "tag_name" | cut -d'"' -f4) ;& \
-   *dev*)   graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-ce-java${java_major_version}-linux-amd64-dev.tar.gz" ;; \
-   release) graalvm_version=$(curl -sS https://api.github.com/repos/graalvm/graalvm-ce-builds/releases/latest | grep "tag_name" | cut -d'"' -f4 | cut -d'-' -f2) ;& \
-   *)       graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm_version}/graalvm-ce-java${java_major_version}-linux-amd64-${graalvm_version}.tar.gz" ;; \
+   latest) graalvm_version=$(curl -sS https://api.github.com/repos/graalvm/graalvm-ce-builds/releases/latest | grep "tag_name" | cut -d'"' -f4 | cut -d'-' -f2) ;& \
+   dev)    graalvm_version=$(curl -sS https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases/latest | grep "tag_name" | cut -d'"' -f4) ;& \
+   *dev*)  graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-ce-java${java_major_version}-linux-amd64-dev.tar.gz" ;; \
+   *)      graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm_version}/graalvm-ce-java${java_major_version}-linux-amd64-${graalvm_version}.tar.gz" ;; \
 esac
 echo "Effective GRAALVM_VERSION: $graalvm_version"
 
@@ -67,6 +67,10 @@ DOCKER_BUILDKIT=1 docker build "$project_root" \
 #################################################
 if [[ "${DOCKER_PUSH:-0}" == "1" ]]; then
    docker image tag $image_name $docker_registry/$image_name
-
    docker push $docker_registry/$image_name
+
+   if [[ $graalvm_version != *dev* ]]; then
+      docker image tag $image_name $docker_registry/$image_repo:$graalvm_version-java$java_major_version
+      docker push $docker_registry/$image_repo:$graalvm_version-java$java_major_version
+   fi
 fi

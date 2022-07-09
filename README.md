@@ -23,7 +23,7 @@ The image comes pre-installed with latest releases of:
 - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
 - [Docker CE](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
 - [git](https://packages.debian.org/de/git) command line client
-- [GraalVM Java 11](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
+- [GraalVM Java 11 or 17](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
 - [upx](https://upx.github.io/) executable packer
 
 
@@ -31,7 +31,7 @@ The image comes pre-installed with latest releases of:
 
 ### Building a local Maven project
 
-To build a Maven project located on your ocal workstation with via this docker image you can do:
+To build a Maven project located on your local workstation with via this docker image you can do:
 
 1. On Linux:
     ```bash
@@ -39,7 +39,7 @@ To build a Maven project located on your ocal workstation with via this docker i
     $ docker run --rm -it \
       -v $PWD:/mnt/myproject:rw \
       -w /mnt/myproject \
-      vegardit/graalvm-maven:release \
+      vegardit/graalvm-maven:latest-java17 \
       mvn clean package
     ```
 
@@ -49,7 +49,7 @@ To build a Maven project located on your ocal workstation with via this docker i
     C:\Users\MyUser\myproject> docker run --rm -it ^
       -v /c/Users/MyUser/myproject:/mnt/myproject:rw ^
       -w /mnt/myproject ^
-      vegardit/graalvm-maven:release ^
+      vegardit/graalvm-maven:latest-java17 ^
       mvn clean package
     ```
 
@@ -66,12 +66,12 @@ You can use a custom Maven [settings.xml](https://maven.apache.org/settings.html
       -v /path/to/my/settings.xml:/root/.m2/settings.xml:ro \
       -v $PWD:/mnt/myproject:rw \
       -w /mnt/myproject \
-      vegardit/graalvm-maven:release \
+      vegardit/graalvm-maven:latest-java17 \
       mvn clean package
 ```
 
 
-### Running docker commands inside the image
+### Running docker commands inside the container
 
 This image has the docker command line client installed, which allows you to run other docker containers as part of your build toolchain using a
 [docker-out-of-docker (DooD)](http://blog.teracy.com/2017/09/11/how-to-use-docker-in-docker-dind-and-docker-outside-of-docker-dood-for-local-ci-testing/) approach
@@ -82,7 +82,7 @@ $ cd ~/myproject
 $ docker run --rm -it \
   -v /var/run/docker.sock:/var/run/docker.sock:rw \
   -v $PWD:/mnt/myproject:rw \
-  vegardit/graalvm-maven:release \
+  vegardit/graalvm-maven:latest-java17 \
   docker run --rm hello-world
 ```
 
@@ -97,7 +97,7 @@ You can a local folder to `/root/.m2/repository` to cache the downloaded artifac
       -v /path/to/my/local/repository:/root/.m2/repository:rw \
       -v $PWD:/mnt/myproject:rw \
       -w /mnt/myproject \
-      vegardit/graalvm-maven:release \
+      vegardit/graalvm-maven:latest-java17 \
       mvn clean package
 ```
 

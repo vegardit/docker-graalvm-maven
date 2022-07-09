@@ -2,7 +2,7 @@
 # see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md
 # see https://docs.docker.com/engine/reference/builder/#syntax
 #
-# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
+# Copyright 2020-2022 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -93,19 +93,19 @@ RUN <<EOF
   /opt/graalvm/bin/gu install native-image
 
   strip --strip-unneeded \
-     /opt/graalvm/bin/unpack200 \
+     /opt/graalvm/bin/unpack200 `# does not exist in Java 17`  \
      /opt/graalvm/languages/js/bin/js \
-     /opt/graalvm/languages/llvm/bin/lli \
-     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
-     /opt/graalvm/lib/installer/bin/gu \
-     /opt/graalvm/lib/svm/bin/native-image
+     /opt/graalvm/languages/llvm/bin/lli `# does not exist in dev` \
+     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* `# does not exist in dev` \
+     /opt/graalvm/lib/installer/bin/gu `# does not exist in dev` \
+     /opt/graalvm/lib/svm/bin/native-image || true
 
   if [[ $UPX_COMPRESS == "true" ]]; then
      /opt/upx/upx -9 \
         /opt/graalvm/languages/llvm/bin/lli \
         /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
         /opt/graalvm/lib/installer/bin/gu \
-        /opt/graalvm/lib/svm/bin/native-image
+        /opt/graalvm/lib/svm/bin/native-image || true
         #/opt/graalvm/bin/unpack200 \
         #/opt/graalvm/languages/js/bin/js \
   fi

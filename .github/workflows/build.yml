@@ -1,4 +1,4 @@
-# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
+# Copyright 2020-2022 by Vegard IT GmbH, Germany, https://vegardit.com
 # SPDX-License-Identifier: Apache-2.0
 #
 # Author: Sebastian Thomschke, Vegard IT GmbH
@@ -35,9 +35,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - GRAALVM_VERSION: release
+        - GRAALVM_VERSION: latest
+          GRAALVM_JAVA_VERSION: 11
           experimental: false
         - GRAALVM_VERSION: latest
+          GRAALVM_JAVA_VERSION: 17
+          experimental: false
+        - GRAALVM_VERSION: dev
+          GRAALVM_JAVA_VERSION: 11
+          experimental: true
+        - GRAALVM_VERSION: dev
+          GRAALVM_JAVA_VERSION: 17
           experimental: true
 
     steps:
@@ -66,13 +74,14 @@ jobs:
       # see https://github.com/actions/virtual-environments/issues/675
       run: sudo apt-get install -o Acquire::Retries=3 --no-install-recommends -y dos2unix
 
-    - name: Build ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
+    - name: Build ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
       shell: bash
       env:
         DOCKER_REGISTRY: docker.io
         DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
         GRAALVM_VERSION: ${{ matrix.GRAALVM_VERSION }}
+        GRAALVM_JAVA_VERSION: ${{ matrix.GRAALVM_JAVA_VERSION }}
         TRIVY_GITHUB_TOKEN: ${{ github.token }}
       run: |
         if [ "$GITHUB_REF" == "refs/heads/main" ]; then
@@ -81,12 +90,10 @@ jobs:
         echo "$DOCKER_REGISTRY_TOKEN" | docker login -u="$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY" --password-stdin
         bash build-image.sh
 
-    - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
+    - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
       shell: bash
-      env:
-        DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
       run: |
-        docker run --rm -t vegardit/graalvm-maven:release /bin/bash -c "
+        docker run --rm -t ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }} /bin/bash -c "
           cd /tmp
           echo 'class HelloWorld { public static void main(String[] args) { System.out.println(\"HelloWorld!\"); }}' > HelloWorld.java
           javac HelloWorld.java
@@ -100,10 +107,10 @@ jobs:
           ./helloworld
         "
 
-    - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }} via Maven
+    - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }} via Maven
       shell: bash
       env:
-        DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}
+        RUN_IN_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
       run: |
         bash example/tools/run-in-docker.sh mvn clean package
         bash example/tools/run-in-docker.sh bash -c target/example
