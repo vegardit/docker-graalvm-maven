@@ -8,41 +8,4 @@
       <pluginGroup>org.apache.maven.plugins</pluginGroup>
    </pluginGroups>
 
-   <profiles>
-      <profile>
-         <!-- https://jfrog.com/knowledge-base/why-should-i-use-jcenter-over-maven-central/ -->
-         <id>jcenter</id>
-         <repositories>
-            <repository>
-               <id>central</id>
-               <name>jcenter-releases</name>
-               <url>https://jcenter.bintray.com</url>
-               <releases>
-                  <enabled>true</enabled>
-               </releases>
-               <snapshots>
-                  <enabled>false</enabled>
-               </snapshots>
-            </repository>
-         </repositories>
-
-         <pluginRepositories>
-            <pluginRepository>
-               <id>central</id>
-               <name>jcenter-plugin-releases</name>
-               <url>https://jcenter.bintray.com</url>
-               <releases>
-                  <enabled>true</enabled>
-               </releases>
-               <snapshots>
-                  <enabled>false</enabled>
-               </snapshots>
-            </pluginRepository>
-         </pluginRepositories>
-      </profile>
-   </profiles>
-
-   <activeProfiles>
-      <activeProfile>jcenter</activeProfile>
-   </activeProfiles>
 </settings>
