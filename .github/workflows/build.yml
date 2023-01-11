@@ -23,6 +23,11 @@ on:
   pull_request:
   workflow_dispatch:
     # https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/
+    inputs:
+      GRAALVM_VERSION:
+        description: 'GraalVM Version'
+        required: true
+        default: 'latest'
 
 env:
   DOCKER_IMAGE_REPO: vegardit/graalvm-maven
@@ -37,17 +42,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-        - GRAALVM_VERSION: latest
+        - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
           GRAALVM_JAVA_VERSION: 11
           experimental: false
-        - GRAALVM_VERSION: latest
+        - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
           GRAALVM_JAVA_VERSION: 17
           experimental: false
         - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 11
+          GRAALVM_JAVA_VERSION: 17
           experimental: true
         - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 17
+          GRAALVM_JAVA_VERSION: 19
           experimental: true
 
     steps:
