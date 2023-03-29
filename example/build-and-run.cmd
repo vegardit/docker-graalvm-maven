@@ -1,9 +1,9 @@
 @echo off
 ::
-:: Copyright 2020-2021 Vegard IT GmbH (https://vegardit.com) and contributors.
+:: SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
+:: SPDX-FileContributor: Sebastian Thomschke
 :: SPDX-License-Identifier: Apache-2.0
-::
-:: Author: Sebastian Thomschke, Vegard IT GmbH
+:: SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 
 set PROJECT_DIR=%~dp0
 

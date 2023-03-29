@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Copyright 2020-2021 by Vegard IT GmbH, Germany, https://vegardit.com
+# SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
+# SPDX-FileContributor: Sebastian Thomschke
 # SPDX-License-Identifier: Apache-2.0
-#
-# Author: Sebastian Thomschke, Vegard IT GmbH
+# SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 
 set -eu
 

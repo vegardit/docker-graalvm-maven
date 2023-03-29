@@ -1,11 +1,9 @@
 #!/usr/bin/env bash
 #
-# Copyright 2020-2022 by Vegard IT GmbH, Germany, https://vegardit.com
+# SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
+# SPDX-FileContributor: Sebastian Thomschke
 # SPDX-License-Identifier: Apache-2.0
-#
-# Author: Sebastian Thomschke, Vegard IT GmbH
-#
-# https://github.com/vegardit/docker-graalvm-maven
+# SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 #
 
 shared_lib="$(dirname $0)/.shared"

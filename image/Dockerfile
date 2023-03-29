@@ -2,14 +2,11 @@
 # see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md
 # see https://docs.docker.com/engine/reference/builder/#syntax
 #
-# Copyright 2020-2022 by Vegard IT GmbH, Germany, https://vegardit.com
+# SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
+# SPDX-FileContributor: Sebastian Thomschke
 # SPDX-License-Identifier: Apache-2.0
+# SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 #
-# Author: Sebastian Thomschke, Vegard IT GmbH
-#
-# https://github.com/vegardit/docker-graalvm-maven
-#
-
 # https://hub.docker.com/_/debian?tab=tags&name=stable-slim
 ARG BASE_IMAGE=debian:stable-slim
 
@@ -28,7 +25,7 @@ ARG BASE_LAYER_CACHE_KEY
 
 RUN --mount=type=bind,source=.shared,target=/mnt/shared <<EOF
 
-  set -eu
+  set -euo pipefail
   /mnt/shared/cmd/debian-install-os-updates.sh
 
   echo "#################################################"
@@ -62,14 +59,14 @@ ARG GIT_COMMIT_DATE
 ARG GIT_REPO_URL
 
 LABEL \
- org.label-schema.schema-version="1.0" \
- org.label-schema.build-date=$BUILD_DATE \
- org.label-schema.vcs-ref=$GIT_COMMIT_HASH \
- org.label-schema.vcs-url=$GIT_REPO_URL
+  org.label-schema.schema-version="1.0" \
+  org.label-schema.build-date=$BUILD_DATE \
+  org.label-schema.vcs-ref=$GIT_COMMIT_HASH \
+  org.label-schema.vcs-url=$GIT_REPO_URL
 
 RUN <<EOF
 
-  set -eu -o pipefail
+  set -euo pipefail
 
   echo "#################################################"
   echo "Installing latest UPX..."
