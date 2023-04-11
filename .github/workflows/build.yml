@@ -34,7 +34,7 @@ defaults:
 env:
   DOCKER_IMAGE_REPO: vegardit/graalvm-maven
   TRIVY_CACHE_DIR: ~/.trivy/cache
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -61,7 +61,7 @@ jobs:
           experimental: true
 
     steps:
-    - name: "Show: environment variables"
+    - name: Show environment variables
       run: env | sort
 
     - name: Git Checkout
@@ -69,6 +69,7 @@ jobs:
 
     - name: Cache trivy cache
       uses: actions/cache@v3
+      if: env.ACT != 'true' # https://github.com/nektos/act#skipping-steps
       with:
         path: ${{ env.TRIVY_CACHE_DIR }}
         # https://github.com/actions/cache/issues/342#issuecomment-673371329
@@ -78,6 +79,7 @@ jobs:
 
     - name: Cache local Maven repository
       uses: actions/cache@v3
+      if: env.ACT != 'true' # https://github.com/nektos/act#skipping-steps
       with:
         path: /tmp/maven-repo
         key: ${{ runner.os }}-mvnrepo-${{ hashFiles('example/pom.xml') }}
@@ -101,10 +103,10 @@ jobs:
         TRIVY_GITHUB_TOKEN: ${{ github.token }}
       run: |
         set -eu
-        if [[ $GITHUB_EVENT_NAME != "pull_request" && $GITHUB_REF_NAME == "main" ]]; then
+        if [[ $GITHUB_REF_NAME == "main" && $GITHUB_EVENT_NAME != "pull_request" && $ACT != "true" ]]; then
           export DOCKER_PUSH=1
+          echo "$DOCKER_REGISTRY_TOKEN" | docker login -u="$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY" --password-stdin
         fi
-        echo "$DOCKER_REGISTRY_TOKEN" | docker login -u="$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY" --password-stdin
         bash build-image.sh
 
     - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
@@ -132,7 +134,7 @@ jobs:
         bash example/tools/run-in-docker.sh bash -c target/example
 
     - name: Publish Docker image to GH registry
-      if: github.ref_name == 'main' && github.event_name != 'pull_request'
+      if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' && !env.ACT }} # https://github.com/nektos/act#skipping-steps
       run: |
         set -eux
 
@@ -141,3 +143,19 @@ jobs:
         image_name="$DOCKER_IMAGE_REPO:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}"
         docker image tag $image_name ghcr.io/$image_name
         docker push ghcr.io/$image_name
+
+    - name: Delete untagged images
+      uses: actions/github-script@v6
+      if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' && !env.ACT }} # https://github.com/nektos/act#skipping-steps
+      with:
+        github-token: ${{ secrets.GHA_DELETE_PACKAGES }}
+        script: |
+          const imageName = /[^/]*$/.exec(process.env.DOCKER_IMAGE_REPO)[0]
+          const basePath = `/orgs/${{ github.repository_owner }}/packages/container/${imageName}/versions`
+          for (version of (await github.request(`GET ${basePath}`, { per_page: 100 })).data) {
+            if (version.metadata.container.tags.length == 0) {
+              console.log(`deleting ${version.name}...`)
+              const delResponse = await github.request(`DELETE ${basePath}/${version.id}`)
+              console.log(`status: ${delResponse.status}`)
+            }
+          }
