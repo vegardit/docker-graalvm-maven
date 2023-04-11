@@ -132,7 +132,8 @@ RUN <<EOF
   echo "Installing latest Apache Maven..."
   echo "#################################################"
   mkdir /opt/maven
-  maven_version=$(curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml | grep -oP '(?<=latest>).*(?=</latest)')
+  #maven_version=$(curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml | grep -oP '(?<=latest>).*(?=</latest)')
+  maven_version=$(curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml | grep -Ev "alpha|beta" | grep -oP '(?<=version>).*(?=</version)' | tail -n1)
   maven_download_url="https://repo1.maven.org/maven2/org/apache/maven/apache-maven/$maven_version/apache-maven-${maven_version}-bin.tar.gz"
   echo "Downloading [$maven_download_url]..."
   curl -fL $maven_download_url | tar zxv -C /opt/maven --strip-components=1
