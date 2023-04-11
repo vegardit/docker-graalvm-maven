@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 #
-
+#test change
 shared_lib="$(dirname $0)/.shared"
 [ -e "$shared_lib" ] || curl -sSf https://raw.githubusercontent.com/vegardit/docker-shared/v1/download.sh?_=$(date +%s) | bash -s v1 "$shared_lib" || exit 1
 source "$shared_lib/lib/build-image-init.sh"
