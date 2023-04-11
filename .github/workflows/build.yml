@@ -143,3 +143,23 @@ jobs:
         image_name="$DOCKER_IMAGE_REPO:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}"
         docker image tag $image_name ghcr.io/$image_name
         docker push ghcr.io/$image_name
+
+  purge-untagged-images:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - name: Delete untagged images
+      uses: actions/github-script@v6
+      if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' && !env.ACT }} # https://github.com/nektos/act#skipping-steps
+      with:
+        github-token: ${{ secrets.GHA_DELETE_PACKAGES }}
+        script: |
+          const imageName = /[^/]*$/.exec(process.env.DOCKER_IMAGE_REPO)[0]
+          const basePath = `/orgs/${{ github.repository_owner }}/packages/container/${imageName}/versions`
+          for (version of (await github.request(`GET ${basePath}`, { per_page: 100 })).data) {
+            if (version.metadata.container.tags.length == 0) {
+              console.log(`deleting ${version.name}...`)
+              const delResponse = await github.request(`DELETE ${basePath}/${version.id}`)
+              console.log(`status: ${delResponse.status}`)
+            }
+          }
