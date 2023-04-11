@@ -31,7 +31,7 @@ RUN --mount=type=bind,source=.shared,target=/mnt/shared <<EOF
   echo "#################################################"
   echo "Installing tools..."
   echo "#################################################"
-  apt-get install --no-install-recommends -y bc ca-certificates curl git htop jq less mc procps vim xz-utils
+  apt-get install --no-install-recommends -y bc ca-certificates curl git htop jq less mc procps vim xz-utils openssh-client
   echo -e "set ignorecase
 set showmatch
 set novisualbell
@@ -59,6 +59,11 @@ ARG GIT_COMMIT_DATE
 ARG GIT_REPO_URL
 ARG GITHUB_TOKEN
 
+ARG USER=user
+ARG USER_HOME_DIR=/home/$USER
+ARG UID=1000
+ARG GID=$UID
+
 LABEL \
   org.label-schema.schema-version="1.0" \
   org.label-schema.build-date=$BUILD_DATE \
@@ -68,6 +73,13 @@ LABEL \
 RUN <<EOF
 
   set -euo pipefail
+
+  echo "#################################################"
+  echo "Adding default user... ${USER} with group ${GID} and home dir ${USER_HOME_DIR}}"
+  echo "#################################################"
+  addgroup --gid $GID $USER
+  adduser --shell /bin/bash --home $USER_HOME_DIR --disabled-password --gid $GID --uid $UID --gecos "" $USER
+  chown -R $USER:$GID /usr/local $USER_HOME_DIR
 
   echo "#################################################"
   echo "Installing latest UPX..."

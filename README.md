@@ -23,9 +23,13 @@ The image comes pre-installed with latest releases of:
 - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
 - [Docker CE](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
 - [git](https://packages.debian.org/de/git) command line client
+- [openssh-client](https://www.openssh.com/)
 - [GraalVM Java 11 or 17](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
 - [upx](https://upx.github.io/) executable packer
 
+
+Further we add the user `user` with uid `1000` and gid `1000` as non-privileged user in order to run without root privileges.
+Note, that the user is not set to 1000 within the docker image. Specify the uid to be `1000` with your docker run command.
 
 ## Usage
 
