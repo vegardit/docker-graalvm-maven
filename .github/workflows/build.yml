@@ -8,9 +8,9 @@ name: Build
 
 on:
   push:
-    branches:
+    branches:    # build all branches
     - '**'
-    tags-ignore:
+    tags-ignore: # but don't build tags
     - '**'
     paths-ignore:
     - '**/*.md'
@@ -26,6 +26,10 @@ on:
         description: 'GraalVM Version'
         required: true
         default: 'latest'
+
+defaults:
+  run:
+    shell: bash
 
 env:
   DOCKER_IMAGE_REPO: vegardit/graalvm-maven
@@ -46,11 +50,14 @@ jobs:
         - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
           GRAALVM_JAVA_VERSION: 17
           experimental: false
+        - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
+          GRAALVM_JAVA_VERSION: 19
+          experimental: false
         - GRAALVM_VERSION: dev
           GRAALVM_JAVA_VERSION: 17
           experimental: true
         - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 19
+          GRAALVM_JAVA_VERSION: 20
           experimental: true
 
     steps:
@@ -81,23 +88,23 @@ jobs:
       run: sudo apt-get install --no-install-recommends -y dos2unix
 
     - name: Build ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
-      shell: bash
       env:
         DOCKER_REGISTRY: docker.io
         DOCKER_REGISTRY_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
         DOCKER_REGISTRY_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
         GRAALVM_VERSION: ${{ matrix.GRAALVM_VERSION }}
         GRAALVM_JAVA_VERSION: ${{ matrix.GRAALVM_JAVA_VERSION }}
         TRIVY_GITHUB_TOKEN: ${{ github.token }}
       run: |
-        if [ "$GITHUB_REF" == "refs/heads/main" ]; then
+        set -eu
+        if [[ $GITHUB_EVENT_NAME != "pull_request" && $GITHUB_REF_NAME == "main" ]]; then
           export DOCKER_PUSH=1
         fi
         echo "$DOCKER_REGISTRY_TOKEN" | docker login -u="$DOCKER_REGISTRY_USERNAME" "$DOCKER_REGISTRY" --password-stdin
         bash build-image.sh
 
     - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
-      shell: bash
       run: |
         docker run --rm -t ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }} /bin/bash -c "
           cd /tmp
@@ -114,14 +121,15 @@ jobs:
         "
 
     - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }} via Maven
-      shell: bash
       env:
         RUN_IN_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
       run: |
+        set -eux
         bash example/tools/run-in-docker.sh mvn clean package
         bash example/tools/run-in-docker.sh bash -c target/example
 
     - name: Publish Docker image to GH registry
+      if: github.ref_name == 'main' && github.event_name != 'pull_request'
       run: |
         set -eux
 
