@@ -16,7 +16,7 @@
 Opinionated docker image based on the [Debian](https://www.debian.org/) docker image [`debian:stable-slim`](https://hub.docker.com/_/debian?tab=tags&name=stable-slim) to
 build native Linux binaries from Java [Maven](http://maven.apache.org/) projects using [GraalVM](https://www.graalvm.org/) [native-image](https://www.graalvm.org/reference-manual/native-image/) feature.
 
-It is automatically built **daily** to include the latest updates and security fixes.
+It is automatically built **twice per week** to include the latest updates and security fixes.
 
 The image comes pre-installed with latest releases of:
 - [Apache Maven](http://maven.apache.org/download.cgi) build automation tool for Java projects
