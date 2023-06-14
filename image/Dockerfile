@@ -42,7 +42,7 @@ set mouse-=a" > ~/.vimrc
   echo "#################################################"
   echo "Installing packages required by GraalVM..."
   echo "#################################################"
-  apt-get install --no-install-recommends -y gcc libstdc++-10-dev libz-dev
+  apt-get install --no-install-recommends -y gcc libstdc++-11-dev libz-dev
 
   /mnt/shared/cmd/debian-cleanup.sh
 
