@@ -14,7 +14,7 @@
 ## <a name="what-is-it"></a>What is it?
 
 Opinionated docker image based on the [Debian](https://www.debian.org/) docker image [`debian:stable-slim`](https://hub.docker.com/_/debian?tab=tags&name=stable-slim) to
-build native Linux binaries from Java [Maven](http://maven.apache.org/) projects using [GraalVM](https://www.graalvm.org/) [native-image](https://www.graalvm.org/reference-manual/native-image/) feature.
+build native Linux binaries from Java [Maven](http://maven.apache.org/) projects using [GraalVM CE](https://www.graalvm.org/) [native-image](https://www.graalvm.org/reference-manual/native-image/) feature.
 
 It is automatically built **twice per week** to include the latest updates and security fixes.
 
@@ -23,7 +23,7 @@ The image comes pre-installed with latest releases of:
 - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
 - [Docker CE (Community Edition)](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
 - [git](https://packages.debian.org/en/git) command line client
-- [GraalVM Java 11, 17 or 19](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
+- [GraalVM CE Java 11, 17 or 20](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
 - [openssh-client](https://packages.debian.org/en/openssh-client) SSH command line client
 - [upx](https://upx.github.io/) executable packer
 
