@@ -154,7 +154,7 @@ RUN <<EOF
   echo "#################################################"
   echo "Installing bash-funk..."
   echo "#################################################"
-  git clone https://github.com/vegardit/bash-funk --depth 1 --branch master --single-branch /opt/bash-funk
+  git clone https://github.com/vegardit/bash-funk --depth 1 --branch main --single-branch /opt/bash-funk
   echo "BASH_FUNK_PROMPT_PREFIX='\033[45;30m GRAALVM '" >> ~/.bashrc
   echo "source /opt/bash-funk/bash-funk.sh" >> ~/.bashrc
 
