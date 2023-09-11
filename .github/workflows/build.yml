@@ -56,10 +56,7 @@ jobs:
           experimental: true
         # https://github.com/graalvm/graalvm-ce-dev-builds/releases
         - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 17
-          experimental: true
-        - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 20
+          GRAALVM_JAVA_VERSION: 21
           experimental: true
 
     steps:

@@ -100,10 +100,10 @@ RUN <<EOF
         --exclude=*/lib/src.zip \
         --exclude=*/lib/visualvm
 
-  /opt/graalvm/bin/gu install native-image
+  /opt/graalvm/bin/gu install native-image || true # does not exist in dev
 
   strip --strip-unneeded \
-     /opt/graalvm/bin/unpack200 `# does not exist in Java 17`  \
+     /opt/graalvm/bin/unpack200 `# does not exist in Java 17+`  \
      /opt/graalvm/languages/js/bin/js \
      /opt/graalvm/languages/llvm/bin/lli `# does not exist in dev` \
      /opt/graalvm/languages/llvm/native/bin/graalvm-native-* `# does not exist in dev` \
