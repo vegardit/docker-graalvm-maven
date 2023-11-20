@@ -148,7 +148,7 @@ jobs:
     needs: [build]
     steps:
     - name: Delete untagged images
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       if: ${{ github.ref_name == 'main' && github.event_name != 'pull_request' && !env.ACT }} # https://github.com/nektos/act#skipping-steps
       with:
         github-token: ${{ secrets.GHA_DELETE_PACKAGES }}
