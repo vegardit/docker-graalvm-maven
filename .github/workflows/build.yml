@@ -67,7 +67,7 @@ jobs:
       uses: actions/checkout@v4 #https://github.com/actions/checkout
 
     - name: Cache trivy cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: env.ACT != 'true' # https://github.com/nektos/act#skipping-steps
       with:
         path: ${{ env.TRIVY_CACHE_DIR }}
@@ -77,7 +77,7 @@ jobs:
           ${{ runner.os }}-trivy-
 
     - name: Cache local Maven repository
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       if: env.ACT != 'true' # https://github.com/nektos/act#skipping-steps
       with:
         path: /tmp/maven-repo
