@@ -53,10 +53,10 @@ jobs:
           experimental: false
         - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
           GRAALVM_JAVA_VERSION: 21
-          experimental: true
+          experimental: false
         # https://github.com/graalvm/graalvm-ce-dev-builds/releases
         - GRAALVM_VERSION: dev
-          GRAALVM_JAVA_VERSION: 21
+          GRAALVM_JAVA_VERSION: 23
           experimental: true
 
     steps:
@@ -120,7 +120,7 @@ jobs:
           ./helloworld
 
           # test static executable
-          native-image --static HelloWorld
+          native-image HelloWorld
           ./helloworld
         "
 

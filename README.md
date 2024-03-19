@@ -37,7 +37,7 @@ Note, that the user is not set to 1000 within the docker image. Specify the uid 
 |Tag|Description
 |-|-
 |`:latest-java11` <br> `:latest-java17` <br> `:latest-java21` | latest available [GraalVM CE releases](https://github.com/graalvm/graalvm-ce-builds/releases) for the given JDK
-|`:dev-java21` | latest available [GraalVM CE development builds](https://github.com/graalvm/graalvm-ce-dev-builds/releases) for the given JDK
+|`:dev-java23` | latest available [GraalVM CE development builds](https://github.com/graalvm/graalvm-ce-dev-builds/releases) for the given JDK
 |`:XX.Y.Z` | the given GraalVM CE releases (e.g. `17.0.8` for JDK 17 and `21.0.0` for JDK 21) following GraaLVM's [new version naming scheme](https://medium.com/graalvm/a-new-graalvm-release-and-new-free-license-4aab483692f5#8822).
 |`:XX.Y.Z-java11` <br> `:XX.Y.Z-java17` | the given GraalVM CE releases (e.g. `22.3.2-java11`) following GraaLVM's **old version naming scheme**
 

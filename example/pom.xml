@@ -42,7 +42,6 @@
                   --allow-incomplete-classpath
                   --no-fallback
                   --no-server
-                  --static
                   --verbose
                </buildArgs>
             </configuration>

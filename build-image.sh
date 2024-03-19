@@ -32,7 +32,7 @@ case $graalvm_version in
           ;;
 
    latest) case $java_major_version in
-              11) graalvm_version="22.3.2";
+              11) graalvm_version="22.3.3";
                   graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm_version}/graalvm-ce-java11-linux-amd64-${graalvm_version}.tar.gz"
                   ;;
               *)  graalvm_version=$(curl -sSfL -N https://github.com/graalvm/graalvm-ce-builds/tags | grep -oP "releases/tag/jdk-\K${java_major_version}.[^=\"]+" | head -n1)
