@@ -13,8 +13,12 @@ on:
     tags-ignore: # but don't build tags
     - '**'
     paths-ignore:
+    - '**/*.adoc'
     - '**/*.md'
+    - '.editorconfig'
+    - '.git*'
     - '.github/*.yml'
+    - '.github/workflows/stale.yml'
   schedule:
     # https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows
     - cron: '0 4 * * */3' # At 04:00 on every 3rd day-of-week
