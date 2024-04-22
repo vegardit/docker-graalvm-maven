@@ -78,6 +78,14 @@ DOCKER_BUILDKIT=1 docker build "$project_root" \
 
 
 #################################################
+# perform security audit
+#################################################
+if [[ "${DOCKER_AUDIT_IMAGE:-1}" == 1 ]]; then
+   bash "$shared_lib/cmd/audit-image.sh" $image_name
+fi
+
+
+#################################################
 # push image with tags to remote docker image registry
 #################################################
 if [[ "${DOCKER_PUSH:-0}" == "1" ]]; then
