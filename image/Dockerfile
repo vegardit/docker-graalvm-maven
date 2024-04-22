@@ -1,5 +1,6 @@
 #syntax=docker/dockerfile:1.4
-# see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md
+# see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md#user-content-syntax
+# see https://docs.docker.com/build/dockerfile/frontend/
 # see https://docs.docker.com/engine/reference/builder/#syntax
 #
 # SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
@@ -16,7 +17,7 @@ LABEL maintainer="Vegard IT GmbH (vegardit.com)"
 
 USER root
 
-SHELL ["/bin/bash", "-c"]
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG LC_ALL=C
@@ -25,7 +26,6 @@ ARG BASE_LAYER_CACHE_KEY
 
 RUN --mount=type=bind,source=.shared,target=/mnt/shared <<EOF
 
-  set -euo pipefail
   /mnt/shared/cmd/debian-install-os-updates.sh
 
   echo "#################################################"
@@ -72,8 +72,6 @@ LABEL \
 
 RUN <<EOF
 
-  set -euo pipefail
-
   echo "#################################################"
   echo "Adding default user... ${USER} with group ${GID} and home dir ${USER_HOME_DIR}}"
   echo "#################################################"
@@ -85,7 +83,11 @@ RUN <<EOF
   echo "Installing latest UPX..."
   echo "#################################################"
   mkdir /opt/upx
-  upx_download_url=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep amd64_linux.tar.xz | cut "-d\"" -f4)
+  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    upx_download_url=$(curl -fsSL https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep amd64_linux.tar.xz | cut "-d\"" -f4)
+  else
+    upx_download_url=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep amd64_linux.tar.xz | cut "-d\"" -f4)
+  fi
   echo "Downloading [$upx_download_url]..."
   curl -fL $upx_download_url | tar Jxv -C /opt/upx --strip-components=1
 
@@ -95,29 +97,29 @@ RUN <<EOF
   mkdir /opt/graalvm
   echo "Downloading [$GRAALVM_DOWNLOAD_URL]..."
   curl -fL "$GRAALVM_DOWNLOAD_URL" | \
-     tar zxv -C /opt/graalvm --strip-components=1 \
-        --exclude=*/bin/jvisualvm \
-        --exclude=*/lib/src.zip \
-        --exclude=*/lib/visualvm
+    tar zxv -C /opt/graalvm --strip-components=1 \
+      --exclude=*/bin/jvisualvm \
+      --exclude=*/lib/src.zip \
+      --exclude=*/lib/visualvm
 
   /opt/graalvm/bin/gu install native-image || true # does not exist in dev
 
   strip --strip-unneeded \
-     /opt/graalvm/bin/unpack200 `# does not exist in Java 17+`  \
-     /opt/graalvm/languages/js/bin/js \
-     /opt/graalvm/languages/llvm/bin/lli `# does not exist in dev` \
-     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* `# does not exist in dev` \
-     /opt/graalvm/lib/installer/bin/gu `# does not exist in dev` \
-     /opt/graalvm/lib/svm/bin/native-image || true
+    /opt/graalvm/bin/unpack200 `# does not exist in Java 17+`  \
+    /opt/graalvm/languages/js/bin/js \
+    /opt/graalvm/languages/llvm/bin/lli `# does not exist in dev` \
+    /opt/graalvm/languages/llvm/native/bin/graalvm-native-* `# does not exist in dev` \
+    /opt/graalvm/lib/installer/bin/gu `# does not exist in dev` \
+    /opt/graalvm/lib/svm/bin/native-image || true
 
   if [[ $UPX_COMPRESS == "true" ]]; then
-     /opt/upx/upx -9 \
-        /opt/graalvm/languages/llvm/bin/lli \
-        /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
-        /opt/graalvm/lib/installer/bin/gu \
-        /opt/graalvm/lib/svm/bin/native-image || true
-        #/opt/graalvm/bin/unpack200 \
-        #/opt/graalvm/languages/js/bin/js \
+    /opt/upx/upx -9 \
+      /opt/graalvm/languages/llvm/bin/lli \
+      /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+      /opt/graalvm/lib/installer/bin/gu \
+      /opt/graalvm/lib/svm/bin/native-image || true
+      #/opt/graalvm/bin/unpack200 \
+      #/opt/graalvm/languages/js/bin/js \
   fi
 
   export JAVA_VERSION=$(java -fullversion 2>&1 | sed -E -n 's/.* version "([^.-]*).*"/\1/p')
@@ -138,7 +140,7 @@ RUN <<EOF
   #rm /tmp/docker-cli.deb
   strip --strip-unneeded /usr/bin/docker
   if [[ $UPX_COMPRESS == "true" ]]; then
-     /opt/upx/upx -9 /usr/bin/docker
+    /opt/upx/upx -9 /usr/bin/docker
   fi
 
   echo "#################################################"
@@ -161,7 +163,7 @@ RUN <<EOF
   echo "#################################################"
   echo "Writing build_info..."
   echo "#################################################"
-  echo -e "
+  echo "
 GIT_REPO:    $GIT_REPO_URL
 GIT_BRANCH:  $GIT_BRANCH
 GIT_COMMIT:  $GIT_COMMIT_HASH @ $GIT_COMMIT_DATE

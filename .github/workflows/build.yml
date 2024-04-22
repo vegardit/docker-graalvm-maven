@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 #
-# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+# https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 name: Build
 
 on:
@@ -134,6 +134,7 @@ jobs:
     - name: Test ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }} via Maven
       env:
         RUN_IN_DOCKER_IMAGE: ${{ env.DOCKER_IMAGE_REPO }}:${{ matrix.GRAALVM_VERSION }}-java${{ matrix.GRAALVM_JAVA_VERSION }}
+      if: ${{ !env.ACT }} # https://github.com/nektos/act#skipping-steps
       run: |
         set -eux
         bash example/tools/run-in-docker.sh mvn clean package
