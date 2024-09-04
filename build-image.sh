@@ -110,7 +110,7 @@ fi
 # usage: crane_command <crane args>
 #################################################
 crane_command() {
-    docker run --rm -it \
+    docker run --rm -t \
         -e DOCKER_REGISTRY="$DOCKER_REGISTRY" \
         -e DOCKER_REGISTRY_USERNAME="$DOCKER_REGISTRY_USERNAME" \
         -e DOCKER_REGISTRY_TOKEN="$DOCKER_REGISTRY_TOKEN" \
