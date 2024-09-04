@@ -86,6 +86,9 @@ RUN <<EOF
           ARCH_2)
             echo "x64"
             ;;
+          ARCH_3)
+            echo "amd64"
+            ;;
           *)
             echo "amd64"
             ;;
@@ -97,6 +100,9 @@ RUN <<EOF
             echo "aarch64"
             ;;
           ARCH_2)
+            echo "aarch64"
+            ;;
+          ARCH_3)
             echo "aarch64"
             ;;
           *)
