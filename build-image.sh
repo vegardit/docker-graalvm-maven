@@ -105,16 +105,32 @@ fi
 
 
 #################################################
+# runs crane commands in a Docker container
+# authenticates with the registry using env vars
+# usage: crane_command <crane args>
+#################################################
+crane_command() {
+    docker run --rm -it \
+        -e DOCKER_REGISTRY="$DOCKER_REGISTRY" \
+        -e DOCKER_REGISTRY_USERNAME="$DOCKER_REGISTRY_USERNAME" \
+        -e DOCKER_REGISTRY_TOKEN="$DOCKER_REGISTRY_TOKEN" \
+        --entrypoint sh \
+        gcr.io/go-containerregistry/crane:debug -c "
+        crane auth login -u \$DOCKER_REGISTRY_USERNAME -p \$DOCKER_REGISTRY_TOKEN \$DOCKER_REGISTRY && crane $*"
+}
+
+
+#################################################
 # push image with tags to remote docker image registry
 #################################################
 if [[ "${DOCKER_PUSH:-0}" == "1" ]]; then
-   docker run --network host --rm gcr.io/go-containerregistry/crane copy $local_registery/$image_name $docker_registry/$image_name
+   crane_command copy $local_registery/$image_name $docker_registry/$image_name
 
    if [[ $graalvm_version != *dev* ]]; then
       if [[ $java_major_version == "11" ]]; then
-         docker run --network host --rm gcr.io/go-containerregistry/crane copy $local_registery/$image_name $docker_registry/$image_repo:$graalvm_version-java$java_major_version  # e.g. 22.3.2-java11
+         crane_command copy $local_registery/$image_name $docker_registry/$image_repo:$graalvm_version-java$java_major_version  # e.g. 22.3.2-java11
       else
-         docker run --network host --rm gcr.io/go-containerregistry/crane copy $local_registery/$image_name $docker_registry/$image_repo:$graalvm_version # e.g. 17.0.7
+         crane_command copy $local_registery/$image_name $docker_registry/$image_repo:$graalvm_version # e.g. 17.0.7
       fi
    fi
 fi
