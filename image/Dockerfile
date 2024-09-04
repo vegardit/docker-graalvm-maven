@@ -77,6 +77,9 @@ RUN <<EOF
     local ARCH=$1
     local TYPE_CODE=$2
 
+    # Remove {{ and }} from TYPE_CODE
+    TYPE_CODE=$(echo "$TYPE_CODE" | sed 's/[{}]//g')
+
     case $ARCH in
       amd64)
         case $TYPE_CODE in
@@ -180,8 +183,8 @@ RUN <<EOF
   echo "#################################################"
   echo "Installing latest Docker client..."
   echo "#################################################"
-  docker_cli_package=$(curl -fLsS https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH ARCH_1)/ | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
-  docker_cli_download_url=https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH ARCH_1)/$docker_cli_package
+  docker_cli_package=$(curl -fLsS https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH "{{ARCH_1}}")/ | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
+  docker_cli_download_url=https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH "{{ARCH_1}}")/$docker_cli_package
   echo "Downloading [$docker_cli_download_url]..."
   curl -fL $docker_cli_download_url | tar zxv -C /usr/bin --strip-components=1 docker/docker
   # this also installs docker app and docker buildx:
