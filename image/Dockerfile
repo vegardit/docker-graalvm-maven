@@ -72,6 +72,50 @@ LABEL \
 
 RUN <<EOF
 
+  # Function to map architecture names based on specific needs
+  get_arch_name() {
+    local ARCH=$1
+    local TYPE_CODE=$2
+
+    case $ARCH in
+      amd64)
+        case $TYPE_CODE in
+          ARCH_1)
+            echo "x86_64"
+            ;;
+          ARCH_2)
+            echo "x64"
+            ;;
+          *)
+            echo "amd64"
+            ;;
+        esac
+        ;;
+      arm64)
+        case $TYPE_CODE in
+          ARCH_1)
+            echo "aarch64"
+            ;;
+          ARCH_2)
+            echo "aarch64"
+            ;;
+          *)
+            echo "arm64"
+            ;;
+        esac
+        ;;
+      *)
+        echo "Unknown architecture"
+        exit 1
+        ;;
+    esac
+  }
+
+  ARCH=$(dpkg --print-architecture)
+  echo "#################################################"
+  echo "${ARCH} based image will be created"
+  echo "#################################################"
+
   echo "#################################################"
   echo "Adding default user... ${USER} with group ${GID} and home dir ${USER_HOME_DIR}}"
   echo "#################################################"
@@ -84,9 +128,9 @@ RUN <<EOF
   echo "#################################################"
   mkdir /opt/upx
   if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-    upx_download_url=$(curl -fsSL https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep amd64_linux.tar.xz | cut "-d\"" -f4)
+    upx_download_url=$(curl -fsSL https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep ${ARCH}_linux.tar.xz | cut "-d\"" -f4)
   else
-    upx_download_url=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep amd64_linux.tar.xz | cut "-d\"" -f4)
+    upx_download_url=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep ${ARCH}_linux.tar.xz | cut "-d\"" -f4)
   fi
   echo "Downloading [$upx_download_url]..."
   curl -fL $upx_download_url | tar Jxv -C /opt/upx --strip-components=1
@@ -95,8 +139,11 @@ RUN <<EOF
   echo "Installing GraalVM..."
   echo "#################################################"
   mkdir /opt/graalvm
-  echo "Downloading [$GRAALVM_DOWNLOAD_URL]..."
-  curl -fL "$GRAALVM_DOWNLOAD_URL" | \
+  # Extract the placeholder (ARCH, ARCH_1, ARCH_2, etc.) from the URL using a regular expression
+  ARCH_PLACEHOLDER=$(echo "$GRAALVM_DOWNLOAD_URL" | grep -o 'ARCH\(_[0-9]\)\?')
+  FINAL_GRAALVM_DOWNLOAD_URL=${GRAALVM_DOWNLOAD_URL//${ARCH_PLACEHOLDER}/$(get_arch_name $ARCH $ARCH_PLACEHOLDER)}
+  echo "Downloading [$FINAL_GRAALVM_DOWNLOAD_URL]..."
+  curl -fL "$FINAL_GRAALVM_DOWNLOAD_URL" | \
     tar zxv -C /opt/graalvm --strip-components=1 \
       --exclude=*/bin/jvisualvm \
       --exclude=*/lib/src.zip \
@@ -127,13 +174,13 @@ RUN <<EOF
   echo "#################################################"
   echo "Installing latest Docker client..."
   echo "#################################################"
-  docker_cli_package=$(curl -fLsS https://download.docker.com/linux/static/stable/x86_64/ | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
-  docker_cli_download_url=https://download.docker.com/linux/static/stable/x86_64/$docker_cli_package
+  docker_cli_package=$(curl -fLsS https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH ARCH_1)/ | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
+  docker_cli_download_url=https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH ARCH_1)/$docker_cli_package
   echo "Downloading [$docker_cli_download_url]..."
   curl -fL $docker_cli_download_url | tar zxv -C /usr/bin --strip-components=1 docker/docker
   # this also installs docker app and docker buildx:
-  #docker_cli_package=$(curl -fsSL https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/ | grep docker-ce-cli | grep buster_amd64 | tail -1 | grep -oP '(?<=deb">).*(?=</a>)')
-  #docker_cli_download_url=https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/$docker_cli_package
+  #docker_cli_package=$(curl -fsSL https://download.docker.com/linux/debian/dists/bullseye/pool/stable/$ARCH/ | grep docker-ce-cli | grep buster_$ARCH | tail -1 | grep -oP '(?<=deb">).*(?=</a>)')
+  #docker_cli_download_url=https://download.docker.com/linux/debian/dists/bullseye/pool/stable/$ARCH/$docker_cli_package
   #echo "Downloading [$docker_cli_download_url]..."
   #curl -fL $docker_cli_download_url -o /tmp/docker-cli.deb
   #dpkg -i /tmp/docker-cli.deb
