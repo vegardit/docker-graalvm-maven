@@ -28,10 +28,10 @@ case $graalvm_version in
    dev)   graalvm_version=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases/latest | grep "tag_name" | cut -d'"' -f4)
           # {{ARCH}}, {{ARCH_1}}, {{ARCH_2}}, ..: Placeholders for architecture (e.g., x86_64, aarch64).
           # get_arch_name in Dockerfile determines the correct architecture (amd64/arm64).
-          graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH}}-dev.tar.gz"
+          graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_3}}-dev.tar.gz"
           ;;
 
-   *dev*) graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH}}-dev.tar.gz"
+   *dev*) graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_3}}-dev.tar.gz"
           ;;
 
    latest) case $java_major_version in
@@ -62,9 +62,9 @@ if [[ $OSTYPE == "cygwin" || $OSTYPE == "msys" ]]; then
 fi
 
 export DOCKER_BUILDKIT=1
-docker run -d -p 5000:5000 --name registry registry
+docker run -d -p 5000:5000 --name registryx registry
 local_registery=localhost:5000
-trap 'docker rm $(docker stop $(docker ps -a --filter ancestor=registry --format="{{.ID}}"))' EXIT
+trap 'docker rm $(docker stop $(docker ps -a --filter ancestor=registryx --format="{{.ID}}"))' EXIT
 docker buildx create --name multiarchbuilder --driver docker-container --driver-opt network=host --bootstrap --platform linux/amd64,linux/arm64
 trap 'docker buildx rm multiarchbuilder' EXIT
 docker buildx build "$project_root" \
@@ -90,16 +90,17 @@ docker buildx build "$project_root" \
 
 
 #################################################
-# pull the container image for security audit
+# pull the container image and retag for security audit and following tasks
 #################################################
 docker pull $local_registery/$image_name
+docker tag $local_registery/$image_name $image_name
 
 
 #################################################
 # perform security audit
 #################################################
 if [[ "${DOCKER_AUDIT_IMAGE:-1}" == 1 ]]; then
-   bash "$shared_lib/cmd/audit-image.sh" "$local_registery/$image_name"
+   bash "$shared_lib/cmd/audit-image.sh" $image_name
 fi
 
 
