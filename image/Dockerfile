@@ -146,7 +146,7 @@ RUN <<EOF
   echo "#################################################"
   mkdir /opt/graalvm
   # Extract the placeholder (ARCH, ARCH_1, ARCH_2, etc.) from the URL using a regular expression
-  ARCH_PLACEHOLDER=$(echo "$GRAALVM_DOWNLOAD_URL" | grep -o 'ARCH\(_[0-9]\)\?')
+  ARCH_PLACEHOLDER=$(echo "$GRAALVM_DOWNLOAD_URL" | grep -o '{{ARCH\(_[0-9]\)\?}}')
   FINAL_GRAALVM_DOWNLOAD_URL=${GRAALVM_DOWNLOAD_URL//${ARCH_PLACEHOLDER}/$(get_arch_name $ARCH $ARCH_PLACEHOLDER)}
   echo "Downloading [$FINAL_GRAALVM_DOWNLOAD_URL]..."
   curl -fL "$FINAL_GRAALVM_DOWNLOAD_URL" | \
