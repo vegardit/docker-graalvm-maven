@@ -62,9 +62,9 @@ if [[ $OSTYPE == "cygwin" || $OSTYPE == "msys" ]]; then
 fi
 
 export DOCKER_BUILDKIT=1
-docker run -d -p 5000:5000 --name registryx registry
+docker run -d -p 5000:5000 --name registry registry
 local_registery=localhost:5000
-trap 'docker rm $(docker stop $(docker ps -a --filter ancestor=registryx --format="{{.ID}}"))' EXIT
+trap 'docker rm $(docker stop $(docker ps -a --filter ancestor=registry --format="{{.ID}}"))' EXIT
 docker buildx create --name multiarchbuilder --driver docker-container --driver-opt network=host --bootstrap --platform linux/amd64,linux/arm64
 trap 'docker buildx rm multiarchbuilder' EXIT
 docker buildx build "$project_root" \
@@ -110,7 +110,7 @@ fi
 # usage: crane_command <crane args>
 #################################################
 crane_command() {
-    docker run --rm -t \
+    docker run --rm -t --network host \
         -e DOCKER_REGISTRY="$DOCKER_REGISTRY" \
         -e DOCKER_REGISTRY_USERNAME="$DOCKER_REGISTRY_USERNAME" \
         -e DOCKER_REGISTRY_TOKEN="$DOCKER_REGISTRY_TOKEN" \
