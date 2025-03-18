@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/github/license/vegardit/docker-graalvm-maven.svg?label=license)](#license)
 [![Docker Pulls](https://img.shields.io/docker/pulls/vegardit/graalvm-maven.svg)](https://hub.docker.com/r/vegardit/graalvm-maven)
 [![Docker Stars](https://img.shields.io/docker/stars/vegardit/graalvm-maven.svg)](https://hub.docker.com/r/vegardit/graalvm-maven)
-[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.1%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 1. [What is it?](#what-is-it)
 1. [Usage](#usage)
@@ -23,7 +23,7 @@ The image comes pre-installed with latest releases of:
 - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
 - [Docker CE (Community Edition)](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
 - [git](https://packages.debian.org/en/git) command line client
-- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 22](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
+- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 24](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
 - [openssh-client](https://packages.debian.org/en/openssh-client) SSH command line client
 - [upx](https://upx.github.io/) executable packer
 
