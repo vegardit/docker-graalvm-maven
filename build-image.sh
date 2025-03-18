@@ -38,7 +38,7 @@ case $graalvm_version in
               11) graalvm_version="22.3.3";
                   graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${graalvm_version}/graalvm-ce-java11-linux-{{ARCH_3}}-${graalvm_version}.tar.gz"
                   ;;
-              *)  graalvm_version=$(curl -sSfL -N https://github.com/graalvm/graalvm-ce-builds/tags | grep -oP "releases/tag/jdk-\K${java_major_version}.[^=\"]+" | head -n1)
+              *)  graalvm_version=$(curl -sSfL -N -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/graalvm/graalvm-ce-builds/git/matching-refs/tags/jdk-${java_major_version} | jq -r 'last | .ref | split("-")[-1]')
                   graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalvm_version}/graalvm-community-jdk-${graalvm_version}_linux-{{ARCH_2}}_bin.tar.gz"
                   ;;
            esac
