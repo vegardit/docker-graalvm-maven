@@ -11,4 +11,4 @@ if [ "${1:-}" == "--help" ]; then
   echo
 fi
 
-/usr/bin/env bash "$(dirname ${BASH_SOURCE[0]})/run-in-docker.sh" bash "$@"
+/usr/bin/env bash "$(dirname "${BASH_SOURCE[0]}")/run-in-docker.sh" bash "$@"

@@ -16,16 +16,21 @@
 Opinionated docker image based on the [Debian](https://www.debian.org/) docker image [`debian:stable-slim`](https://hub.docker.com/_/debian?tab=tags&name=stable-slim) to
 build native Linux binaries from Java [Maven](http://maven.apache.org/) projects using [GraalVM CE](https://www.graalvm.org/) [native-image](https://www.graalvm.org/reference-manual/native-image/) feature.
 
-It is automatically built **twice per week** to include the latest updates and security fixes.
+It is automatically built **weekly** to include the latest OS security fixes.
 
 The image comes pre-installed with latest releases of:
 - [Apache Maven](http://maven.apache.org/download.cgi) build automation tool for Java projects
-- [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
 - [Docker CE (Community Edition)](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
-- [git](https://packages.debian.org/en/git) command line client
-- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 24](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension.
-- [openssh-client](https://packages.debian.org/en/openssh-client) SSH command line client
-- [upx](https://upx.github.io/) executable packer
+- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 24](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension
+- tools:
+  - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
+  - [git](https://packages.debian.org/en/git) command line client
+  - [htop](https://htop.dev/) interactive process viewer
+  - [mc](https://midnight-commander.org/) aka Midnight Commander
+  - [openssh-client](https://packages.debian.org/en/openssh-client) SSH command line client
+  - [upx](https://upx.github.io/) executable packer
+  - [Vim](https://www.vim.org/) text editor
+
 
 
 Further we add the user `user` with uid `1000` and gid `1000` as non-privileged user in order to run without root privileges.

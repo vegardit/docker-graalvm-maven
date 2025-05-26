@@ -6,7 +6,7 @@
 # SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
 
 if [ $# -eq 0 ]; then
-  echo "ERROR: No goals have been specified for this build. Use $(basename ${BASH_SOURCE[0]}) --help for more details."
+  echo "ERROR: No goals have been specified for this build. Use $(basename "${BASH_SOURCE[0]}") --help for more details."
   exit 1
 fi
 
@@ -16,4 +16,4 @@ if [ "${1:-}" == "--help" ]; then
   echo
 fi
 
-/usr/bin/env bash "$(dirname ${BASH_SOURCE[0]})/tools/run-in-docker.sh" mvn "$@"
+/usr/bin/env bash "$(dirname "${BASH_SOURCE[0]}")/tools/run-in-docker.sh" mvn "$@"

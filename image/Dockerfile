@@ -1,31 +1,37 @@
-#syntax=docker/dockerfile:1.4
-# see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md#user-content-syntax
-# see https://docs.docker.com/build/dockerfile/frontend/
+#syntax=docker/dockerfile:1
+# see https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/reference.md
 # see https://docs.docker.com/engine/reference/builder/#syntax
 #
 # SPDX-FileCopyrightText: © Vegard IT GmbH (https://vegardit.com)
 # SPDX-FileContributor: Sebastian Thomschke
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-ArtifactOfProjectHomePage: https://github.com/vegardit/docker-graalvm-maven
-#
-# https://hub.docker.com/_/debian?tab=tags&name=stable-slim
+
+# https://hub.docker.com/_/debian/tags?name=stable-slim
 ARG BASE_IMAGE=debian:stable-slim
 
-FROM ${BASE_IMAGE}
+#############################################################
+# build final image
+#############################################################
 
-LABEL maintainer="Vegard IT GmbH (vegardit.com)"
-
-USER root
-
-SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+# https://github.com/hadolint/hadolint/wiki/DL3006 Always tag the version of an image explicitly
+# hadolint ignore=DL3006
+FROM ${BASE_IMAGE} as final
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG LC_ALL=C
 
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+# https://github.com/hadolint/hadolint/wiki/DL3002 Last USER should not be root
+# hadolint ignore=DL3002
+USER root
+
 ARG BASE_LAYER_CACHE_KEY
 
+# https://github.com/hadolint/hadolint/wiki/DL3008 Pin versions in apt-get
+# hadolint ignore=DL3008
 RUN --mount=type=bind,source=.shared,target=/mnt/shared <<EOF
-
   /mnt/shared/cmd/debian-install-os-updates.sh
 
   echo "#################################################"
@@ -52,65 +58,66 @@ ARG GRAALVM_DOWNLOAD_URL
 ARG JAVA_MAJOR_VERSION
 ARG UPX_COMPRESS=true
 
-ARG BUILD_DATE
+ARG OCI_authors
+ARG OCI_title
+ARG OCI_description
+ARG OCI_source
+ARG OCI_revision
+ARG OCI_version
+ARG OCI_created
+
 ARG GIT_BRANCH
-ARG GIT_COMMIT_HASH
 ARG GIT_COMMIT_DATE
-ARG GIT_REPO_URL
-ARG GITHUB_TOKEN
+
+# https://github.com/opencontainers/image-spec/blob/main/annotations.md
+LABEL \
+  org.opencontainers.image.title="$OCI_title" \
+  org.opencontainers.image.description="$OCI_description" \
+  org.opencontainers.image.source="$OCI_source" \
+  org.opencontainers.image.revision="$OCI_revision" \
+  org.opencontainers.image.version="$OCI_version" \
+  org.opencontainers.image.created="$OCI_created"
+
+LABEL maintainer="$OCI_authors"
 
 ARG USER=user
 ARG USER_HOME_DIR=/home/$USER
 ARG UID=1000
 ARG GID=$UID
 
-LABEL \
-  org.label-schema.schema-version="1.0" \
-  org.label-schema.build-date=$BUILD_DATE \
-  org.label-schema.vcs-ref=$GIT_COMMIT_HASH \
-  org.label-schema.vcs-url=$GIT_REPO_URL
+RUN --mount=type=secret,id=github_token,required=false <<EOF
 
-RUN <<EOF
+  ARCH=$(dpkg --print-architecture)
 
-  # Function to map architecture names based on specific needs
-  get_arch_name() {
-    local ARCH=$1
-    local TYPE_CODE=$2
+  echo "#################################################"
+  echo "$ARCH based image will be created"
+  echo "#################################################"
 
-    # Remove {{ and }} from TYPE_CODE
-    TYPE_CODE=$(echo "$TYPE_CODE" | sed 's/[{}]//g')
+  # Function to resolve the arch ID for binary packages
+  function resolve_arch() {
+    local ARCH_PLACEHOLDER; ARCH_PLACEHOLDER=$1
+    # strip the leading '{{ARCH_':
+    APP_ID="${ARCH_PLACEHOLDER#\{\{ARCH_}"
+    # strip the trailing '}}'':
+    APP_ID="${APP_ID%\}\}}"
 
     case $ARCH in
       amd64)
-        case $TYPE_CODE in
-          ARCH_1)
-            echo "x86_64"
-            ;;
-          ARCH_2)
-            echo "x64"
-            ;;
-          ARCH_3)
-            echo "amd64"
-            ;;
-          *)
-            echo "amd64"
-            ;;
+        case $APP_ID in
+          DOCKER_CLIENT) echo "x86_64" ;;
+          GRAAL)         echo "x64" ;;
+          GRAAL_DEV)     echo "amd64" ;;
+          GRAAL_LEGACY)  echo "amd64" ;;
+          *)             echo "amd64" ;;
         esac
         ;;
       arm64)
-        case $TYPE_CODE in
-          ARCH_1)
-            echo "aarch64"
-            ;;
-          ARCH_2)
-            echo "aarch64"
-            ;;
-          ARCH_3)
-            echo "aarch64"
-            ;;
-          *)
-            echo "arm64"
-            ;;
+        case $APP_ID in
+          DOCKER_CLIENT) echo "aarch64" ;;
+          GRAAL)         echo "aarch64" ;;
+          GRAAL_DEV)     echo "aarch64" ;;
+          GRAAL_LEGACY)  echo "aarch64" ;;
+          *)             echo "arm64" ;;
         esac
         ;;
       *)
@@ -120,37 +127,33 @@ RUN <<EOF
     esac
   }
 
-  ARCH=$(dpkg --print-architecture)
   echo "#################################################"
-  echo "${ARCH} based image will be created"
+  echo "Adding default user... $USER with group $GID and home dir $USER_HOME_DIR"
   echo "#################################################"
-
-  echo "#################################################"
-  echo "Adding default user... ${USER} with group ${GID} and home dir ${USER_HOME_DIR}}"
-  echo "#################################################"
-  addgroup --gid $GID $USER
-  adduser --shell /bin/bash --home $USER_HOME_DIR --disabled-password --gid $GID --uid $UID --gecos "" $USER
-  chown -R $USER:$GID /usr/local $USER_HOME_DIR
+  addgroup --gid "$GID" "$USER"
+  adduser --shell /bin/bash --home "$USER_HOME_DIR" --disabled-password --gid "$GID" --uid "$UID" --gecos "" "$USER"
+  chown -R "$USER:$GID" /usr/local "$USER_HOME_DIR"
 
   echo "#################################################"
   echo "Installing latest UPX..."
   echo "#################################################"
   mkdir /opt/upx
-  if [[ -z "${GITHUB_TOKEN:-}" ]]; then
-    upx_download_url=$(curl -fsSL https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep ${ARCH}_linux.tar.xz | cut "-d\"" -f4)
-  else
-    upx_download_url=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep ${ARCH}_linux.tar.xz | cut "-d\"" -f4)
+  if [[ -f /run/secrets/github_token ]]; then
+     auth=(-H "Authorization: Bearer $(cat /run/secrets/github_token)")
   fi
+
+  upx_download_url=$(curl -fsSL "${auth[@]:-}" https://api.github.com/repos/upx/upx/releases/latest | grep browser_download_url | grep "${ARCH}_linux.tar.xz" | cut "-d\"" -f4)
+
   echo "Downloading [$upx_download_url]..."
-  curl -fL $upx_download_url | tar Jxv -C /opt/upx --strip-components=1
+  curl -fL "$upx_download_url" | tar Jxv -C /opt/upx --strip-components=1
 
   echo "#################################################"
   echo "Installing GraalVM..."
   echo "#################################################"
   mkdir /opt/graalvm
-  # Extract the placeholder (ARCH, ARCH_1, ARCH_2, etc.) from the URL using a regular expression
-  ARCH_PLACEHOLDER=$(echo "$GRAALVM_DOWNLOAD_URL" | grep -o '{{ARCH\(_[0-9]\)\?}}')
-  FINAL_GRAALVM_DOWNLOAD_URL=${GRAALVM_DOWNLOAD_URL//${ARCH_PLACEHOLDER}/$(get_arch_name $ARCH $ARCH_PLACEHOLDER)}
+  # Extract {{ARCH_xyz}} placeholder from the URL
+  ARCH_PLACEHOLDER=$(echo "$GRAALVM_DOWNLOAD_URL" | grep -oE '\{\{(ARCH(_[_[:alnum:]]+)?)\}\}')
+  FINAL_GRAALVM_DOWNLOAD_URL=${GRAALVM_DOWNLOAD_URL//${ARCH_PLACEHOLDER}/$(resolve_arch "$ARCH_PLACEHOLDER")}
   echo "Downloading [$FINAL_GRAALVM_DOWNLOAD_URL]..."
   curl -fL "$FINAL_GRAALVM_DOWNLOAD_URL" | \
     tar zxv -C /opt/graalvm --strip-components=1 \
@@ -178,15 +181,16 @@ RUN <<EOF
       #/opt/graalvm/languages/js/bin/js \
   fi
 
-  export JAVA_VERSION=$(java -fullversion 2>&1 | sed -E -n 's/.* version "([^.-]*).*"/\1/p')
+  JAVA_MAJOR_VERSION=$(/opt/graalvm/bin/java -fullversion 2>&1 | sed -E -n 's/.* version "([^.-]*).*"/\1/p')
+  export JAVA_MAJOR_VERSION
 
   echo "#################################################"
   echo "Installing latest Docker client..."
   echo "#################################################"
-  docker_cli_package=$(curl -fLsS https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH "{{ARCH_1}}")/ | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
-  docker_cli_download_url=https://download.docker.com/linux/static/stable/$(get_arch_name $ARCH "{{ARCH_1}}")/$docker_cli_package
+  docker_cli_package=$(curl -fLsS "https://download.docker.com/linux/static/stable/$(resolve_arch "{{ARCH_DOCKER_CLIENT}}")/" | grep -oP '(?<=>)docker-\d+.\d+.\d+.tgz(?=</a>)' | tail -1)
+  docker_cli_download_url=https://download.docker.com/linux/static/stable/$(resolve_arch "{{ARCH_DOCKER_CLIENT}}")/$docker_cli_package
   echo "Downloading [$docker_cli_download_url]..."
-  curl -fL $docker_cli_download_url | tar zxv -C /usr/bin --strip-components=1 docker/docker
+  curl -fL "$docker_cli_download_url" | tar zxv -C /usr/bin --strip-components=1 docker/docker
   # this also installs docker app and docker buildx:
   #docker_cli_package=$(curl -fsSL https://download.docker.com/linux/debian/dists/bullseye/pool/stable/$ARCH/ | grep docker-ce-cli | grep buster_$ARCH | tail -1 | grep -oP '(?<=deb">).*(?=</a>)')
   #docker_cli_download_url=https://download.docker.com/linux/debian/dists/bullseye/pool/stable/$ARCH/$docker_cli_package
@@ -205,25 +209,27 @@ RUN <<EOF
   mkdir /opt/maven
   #maven_version=$(curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml | grep -oP '(?<=latest>).*(?=</latest)')
   maven_version=$(curl -fsSL https://repo1.maven.org/maven2/org/apache/maven/apache-maven/maven-metadata.xml | grep -Ev "alpha|beta|rc" | grep -oP '(?<=version>).*(?=</version)' | tail -n1)
-  maven_download_url="https://repo1.maven.org/maven2/org/apache/maven/apache-maven/$maven_version/apache-maven-${maven_version}-bin.tar.gz"
+  maven_download_url=https://repo1.maven.org/maven2/org/apache/maven/apache-maven/$maven_version/apache-maven-${maven_version}-bin.tar.gz
   echo "Downloading [$maven_download_url]..."
-  curl -fL $maven_download_url | tar zxv -C /opt/maven --strip-components=1
+  curl -fL "$maven_download_url" | tar zxv -C /opt/maven --strip-components=1
 
   echo "#################################################"
   echo "Installing bash-funk..."
   echo "#################################################"
   git clone https://github.com/vegardit/bash-funk --depth 1 --branch main --single-branch /opt/bash-funk
-  echo "BASH_FUNK_PROMPT_PREFIX='\033[45;30m GRAALVM '" >> ~/.bashrc
+  # shellcheck disable=SC2028  # echo may not expand escape sequences. Use printf
+  echo   "BASH_FUNK_PROMPT_PREFIX='\033[45;30m GRAALVM '" >> ~/.bashrc
   echo "source /opt/bash-funk/bash-funk.sh" >> ~/.bashrc
 
   echo "#################################################"
   echo "Writing build_info..."
   echo "#################################################"
-  echo "
-GIT_REPO:    $GIT_REPO_URL
+  cat <<EOT >/opt/build_info
+GIT_REPO:    $OCI_source
 GIT_BRANCH:  $GIT_BRANCH
-GIT_COMMIT:  $GIT_COMMIT_HASH @ $GIT_COMMIT_DATE
-IMAGE_BUILD: $BUILD_DATE" >/opt/build_info
+GIT_COMMIT:  $OCI_revision @ $GIT_COMMIT_DATE
+IMAGE_BUILD: $OCI_created
+EOT
   cat /opt/build_info
 
 EOF
@@ -232,14 +238,14 @@ COPY image/settings.xml /root/.m2/settings.xml
 COPY image/toolchains.xml /root/.m2/toolchains.xml
 
 ENV \
-  PATH="/opt/graalvm/bin:/opt/maven/bin:/opt/upx:${PATH}" \
+  PATH="/opt/graalvm/bin:/opt/maven/bin:/opt/upx:$PATH" \
   JAVA_HOME=/opt/graalvm \
-  JAVA_MAJOR_VERSION=${JAVA_MAJOR_VERSION} \
+  JAVA_MAJOR_VERSION=$JAVA_MAJOR_VERSION \
   MAVEN_HOME=/opt/maven \
   M2_HOME=/opt/maven \
   MAVEN_CONFIG="/root/.m2" \
   MAVEN_OPTS="-Xmx1024m -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true -Dfile.encoding=UTF-8"
 
-CMD "/bin/sh" "-c" "cat /opt/build_info && java --version && echo && mvn --version"
+CMD ["/bin/sh", "-c", "cat /opt/build_info && java --version && echo && mvn --version"]
 
 VOLUME "/root/.m2/repository"

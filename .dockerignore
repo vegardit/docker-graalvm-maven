@@ -1,7 +1,13 @@
 *.md
 *.txt
+.actrc
+.dockerignore
+.editorconfig
+.gitattributes
+.gitignore
 .github/
 .shared/.*
 .shared/*.md
 .shared/*.txt
 example
+image/Dockerfile

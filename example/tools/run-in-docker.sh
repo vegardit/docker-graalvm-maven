@@ -18,6 +18,7 @@ set -o pipefail
 #################################################
 # install debug traps
 #################################################
+# shellcheck disable=SC2154 # rc is referenced but not assigned
 trap 'rc=$?; echo >&2 "$(date +%H:%M:%S) Error - exited with status $rc in [$BASH_SOURCE] at line $LINENO:"; cat -n $BASH_SOURCE | tail -n+$((LINENO - 3)) | head -n7' ERR
 
 if [[ "${DEBUG:-}" == "1" ]]; then
@@ -29,7 +30,7 @@ if [[ "${DEBUG:-}" == "1" ]]; then
     set -T
 
     __print_debug_statement() {
-      printf "\e[90m#[$?] $BASH_SOURCE:$1 ${FUNCNAME[1]}() %*s\e[35m$BASH_COMMAND\e[m\n" "$(( 2 * ($BASH_SUBSHELL + ${#FUNCNAME[*]} - 2) ))" >&2
+      printf "\e[90m#[$?] ${BASH_SOURCE[1]}:$1 ${FUNCNAME[1]}() %*s\e[35m%s\e[m\n" "$(( 2 * (BASH_SUBSHELL + ${#FUNCNAME[*]} - 2) ))" "$BASH_COMMAND" >&2
     }
     trap '__print_debug_statement $LINENO' DEBUG
   fi
@@ -37,7 +38,7 @@ fi
 
 
 function printHelp() {
-  echo "Usage: $(basename ${BASH_SOURCE[0]}) command [args]..."
+  echo "Usage: $(basename "${BASH_SOURCE[0]}") command [args]..."
   echo
   echo "Runs the given command in a docker container using the image specified by the"
   echo "environment variable RUN_IN_DOCKER_IMAGE with the current project mounted to"
@@ -50,17 +51,17 @@ if [ $# -eq 0 ]; then
   printHelp
 fi
 
-if [ "$1" == "--help" ]; then
+if [[ $1 == "--help" ]]; then
   printHelp
   exit 0
 fi
 
 export RUN_IN_DOCKER_IMAGE=${RUN_IN_DOCKER_IMAGE:-vegardit/graalvm-maven:latest-java11}
 
-project_root=$(readlink -e "$(dirname ${BASH_SOURCE[0]})/..")
+project_root=$(readlink -e "$(dirname "${BASH_SOURCE[0]}")/..")
 project_name=$(basename "$project_root")
 
-if [[ $OSTYPE == "cygwin" || $OSTYPE == "msys" ]]; then
+if [[ $OSTYPE == cygwin || $OSTYPE == msys ]]; then
   # the linux path in cygwin may not correspond to the linux path in docker
   # thus we construct it manually
   project_dir_in_docker=$(cygpath -w "$project_root")
@@ -79,9 +80,9 @@ else
 fi
 
 docker run --rm $interactive_flag --tty \
-  -v $project_dir_in_docker:/mnt/$project_name:rw \
+  -v "$project_dir_in_docker:/mnt/$project_name:rw" \
   -v /tmp/maven-repo:/root/.m2/repository:rw \
   -v /var/run/docker.sock:/var/run/docker.sock:rw \
-  -w /mnt/$project_name \
-  $RUN_IN_DOCKER_IMAGE \
+  -w "/mnt/$project_name" \
+  "$RUN_IN_DOCKER_IMAGE" \
   "$@"
