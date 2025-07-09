@@ -16,7 +16,7 @@ ARG BASE_IMAGE=debian:stable-slim
 
 # https://github.com/hadolint/hadolint/wiki/DL3006 Always tag the version of an image explicitly
 # hadolint ignore=DL3006
-FROM ${BASE_IMAGE} as final
+FROM ${BASE_IMAGE}
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG LC_ALL=C
