@@ -71,7 +71,7 @@ jobs:
           GRAALVM_JAVA_VERSION: 21
           experimental: false
         - GRAALVM_VERSION: ${{ github.event.inputs.GRAALVM_VERSION || 'latest' }}
-          GRAALVM_JAVA_VERSION: 24
+          GRAALVM_JAVA_VERSION: 25
           experimental: false
         # https://github.com/graalvm/graalvm-ce-dev-builds/releases
         - GRAALVM_VERSION: dev

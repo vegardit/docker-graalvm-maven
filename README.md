@@ -21,7 +21,7 @@ It is automatically built **weekly** to include the latest OS security fixes.
 The image comes pre-installed with latest releases of:
 - [Apache Maven](http://maven.apache.org/download.cgi) build automation tool for Java projects
 - [Docker CE (Community Edition)](https://download.docker.com/linux/debian/dists/bullseye/pool/stable/amd64/) command line client
-- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 24](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension
+- [GraalVM CE (Community Edition) for JDK 11, 17, 21 or 25](https://www.graalvm.org/downloads/) with [native-image](https://www.graalvm.org/reference-manual/native-image/) extension
 - tools:
   - [bash-funk](https://github.com/vegardit/bash-funk) Bash toolbox with adaptive Bash prompt
   - [git](https://packages.debian.org/en/git) command line client
@@ -41,7 +41,7 @@ Note, that the user is not set to 1000 within the docker image. Specify the uid 
 
 |Tag|Description
 |-|-
-|<pre>:latest-java11<br>:latest-java17<br>:latest-java21<br>:latest-java24</pre> | latest available [GraalVM CE releases](https://github.com/graalvm/graalvm-ce-builds/releases) for the given JDK
+|<pre>:latest-java11<br>:latest-java17<br>:latest-java21<br>:latest-java25</pre> | latest available [GraalVM CE releases](https://github.com/graalvm/graalvm-ce-builds/releases) for the given JDK
 |<pre>:dev-java25</pre> | latest available [GraalVM CE development builds](https://github.com/graalvm/graalvm-ce-dev-builds/releases) for the given JDK
 |<pre>:XX.Y.Z</pre> | the given GraalVM CE releases (e.g. `17.0.8` for JDK 17 and `21.0.0` for JDK 21) following GraaLVM's [new version naming scheme](https://medium.com/graalvm/a-new-graalvm-release-and-new-free-license-4aab483692f5#8822).
 |<pre>:XX.Y.Z-java11<br>:XX.Y.Z-java17</pre> | the given GraalVM CE releases (e.g. `22.3.2-java11`) following GraaLVM's **old version naming scheme**
