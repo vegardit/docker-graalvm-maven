@@ -161,13 +161,15 @@ RUN --mount=type=secret,id=github_token,required=false <<EOF
       --exclude=*/lib/src.zip \
       --exclude=*/lib/visualvm
 
-  /opt/graalvm/bin/gu install native-image || true # does not exist in dev
+  /opt/graalvm/bin/gu install native-image || true # may not exist for some distributions/dev builds
+  /opt/graalvm/bin/gu install wasm || true # may not exist for some distributions/dev builds
 
   strip --strip-unneeded \
     /opt/graalvm/bin/unpack200 `# does not exist in Java 17+`  \
     /opt/graalvm/languages/js/bin/js \
     /opt/graalvm/languages/llvm/bin/lli `# does not exist in dev` \
     /opt/graalvm/languages/llvm/native/bin/graalvm-native-* `# does not exist in dev` \
+    /opt/graalvm/languages/wasm/bin/wasm `# wasm launcher, if installed` \
     /opt/graalvm/lib/installer/bin/gu `# does not exist in dev` \
     /opt/graalvm/lib/svm/bin/native-image || true
 
@@ -175,6 +177,7 @@ RUN --mount=type=secret,id=github_token,required=false <<EOF
     /opt/upx/upx -9 \
       /opt/graalvm/languages/llvm/bin/lli \
       /opt/graalvm/languages/llvm/native/bin/graalvm-native-* \
+      /opt/graalvm/languages/wasm/bin/wasm \
       /opt/graalvm/lib/installer/bin/gu \
       /opt/graalvm/lib/svm/bin/native-image || true
       #/opt/graalvm/bin/unpack200 \
