@@ -39,12 +39,16 @@ java_major_version=${GRAALVM_JAVA_VERSION:-11}
 # see get_arch_name function in Dockerfile that maps {{ARCH_...}} place holders to actual architecture identifiers
 image_tag="$graalvm_version-java$java_major_version"  # e.g. dev-java17, latest-java17, 22.3.2-java17
 case $graalvm_version in
-  dev) graalvm_version=$(curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases/latest | grep "tag_name" | cut -d'"' -f4)
-       graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_GRAAL_DEV}}-dev.tar.gz"
-     ;;
+  dev)
+    # doesn't work anymore:
+    # graalvm_version=$(curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases/latest | grep "tag_name" | cut -d'"' -f4)
+    graalvm_version=$(curl -s -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/graalvm/graalvm-ce-dev-builds/releases | jq -r '.[0].tag_name')
+    graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_GRAAL_DEV}}-dev.tar.gz"
+    ;;
 
-  *dev*) graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_GRAAL_DEV}}-dev.tar.gz"
-     ;;
+  *dev*)
+    graalvm_url="https://github.com/graalvm/graalvm-ce-dev-builds/releases/download/${graalvm_version}/graalvm-community-java${java_major_version}-linux-{{ARCH_GRAAL_DEV}}-dev.tar.gz"
+    ;;
 
   latest)
     case $java_major_version in
@@ -57,9 +61,10 @@ case $graalvm_version in
     esac
     ;;
 
-  *) graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalvm_version}/graalvm-community-jdk-${graalvm_version}_linux-{{ARCH_GRAAL}}_bin.tar.gz"
-     image_tag="$graalvm_version" # e.g. 17.0.7
-     ;;
+  *)
+    graalvm_url="https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalvm_version}/graalvm-community-jdk-${graalvm_version}_linux-{{ARCH_GRAAL}}_bin.tar.gz"
+    image_tag="$graalvm_version" # e.g. 17.0.7
+    ;;
 esac
 echo "Effective GRAALVM_VERSION: $graalvm_version"
 
