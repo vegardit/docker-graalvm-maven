@@ -24,13 +24,15 @@ ARG LC_ALL=C
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 # https://github.com/hadolint/hadolint/wiki/DL3002 Last USER should not be root
-# hadolint ignore=DL3002
+# https://github.com/hadolint/hadolint/wiki/DL3066 Non-numeric user-id may not be resolvable by host system
+# hadolint ignore=DL3002,DL3066
 USER root
 
 ARG BASE_LAYER_CACHE_KEY
 
-# https://github.com/hadolint/hadolint/wiki/DL3008 Pin versions in apt-get
-# hadolint ignore=DL3008
+# NOTE: SC3014 is temporary workaround for https://github.com/hadolint/hadolint/issues/1241
+# https://github.com/hadolint/hadolint/wiki/DL3008 Pin versions
+# hadolint ignore=DL3008,SC3014
 RUN --mount=type=bind,source=.shared,target=/mnt/shared <<EOF
   /mnt/shared/cmd/debian-install-os-updates.sh
 
