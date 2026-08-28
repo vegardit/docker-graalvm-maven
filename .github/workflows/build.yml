@@ -7,6 +7,9 @@
 name: Build
 
 on:  # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
+  schedule:
+    # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
+    - cron: '0 17 * * 3'
   push:
     branches-ignore:  # build all branches except:
     - 'dependabot/**'  # prevent GHA triggered twice (once for commit to the branch and once for opening/syncing the PR)
@@ -25,9 +28,6 @@ on:  # https://docs.github.com/en/actions/reference/workflows-and-actions/events
     - '.git*'
     - '.github/*.yml'
     - '.github/workflows/stale.yml'
-  schedule:
-    # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule
-    - cron: '0 17 * * 3'
   workflow_dispatch:
     # https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#workflow_dispatch
     inputs:
@@ -44,8 +44,10 @@ env:
   DOCKER_REPO_NAME: graalvm-maven
   TRIVY_CACHE_DIR: ~/.trivy/cache
 
+
 permissions:
   contents: read
+
 
 jobs:
 
@@ -91,11 +93,15 @@ jobs:
     - name: "Show: GitHub context"
       env:
         GITHUB_CONTEXT: ${{ toJSON(github) }}
-      run: echo $GITHUB_CONTEXT
+      run: printf '%s' "$GITHUB_CONTEXT" | python -m json.tool
 
 
     - name: "Show: environment variables"
       run: env | sort
+
+
+    - name: "Show: Bash version"
+      run: bash --version
 
 
     - name: Git Checkout
