@@ -168,7 +168,19 @@ RUN --mount=type=secret,id=github_token,required=false <<EOF
 
   # Some distributions bundle Native Image even when gu cannot install it.
   if [[ ! -x /opt/graalvm/bin/native-image ]]; then
-    /opt/graalvm/bin/gu install native-image
+    if [[ $JAVA_MAJOR_VERSION == "11" ]]; then
+      # NOTE: Java 11's bundled gu triggers GitHub HTTP 406, hidden as a timeout.
+      native_image_url=${FINAL_GRAALVM_DOWNLOAD_URL/graalvm-ce-java/native-image-installable-svm-java}
+      native_image_url=${native_image_url%.tar.gz}.jar
+      native_image_file=$(mktemp --suffix=.jar)
+      curl -fL --retry 3 "$native_image_url" -o "$native_image_file"
+      native_image_sha256=$(curl -fsSL --retry 3 "$native_image_url.sha256")
+      printf '%s  %s\n' "$native_image_sha256" "$native_image_file" | sha256sum --check -
+      /opt/graalvm/bin/gu -L install "$native_image_file"
+      rm "$native_image_file"
+    else
+      /opt/graalvm/bin/gu install native-image
+    fi
   fi
   /opt/graalvm/bin/native-image --version
   /opt/graalvm/bin/gu install wasm || true # may not exist for some distributions/dev builds
