@@ -166,7 +166,11 @@ RUN --mount=type=secret,id=github_token,required=false <<EOF
       --exclude=*/lib/src.zip \
       --exclude=*/lib/visualvm
 
-  /opt/graalvm/bin/gu install native-image || true # may not exist for some distributions/dev builds
+  # Some distributions bundle Native Image even when gu cannot install it.
+  if [[ ! -x /opt/graalvm/bin/native-image ]]; then
+    /opt/graalvm/bin/gu install native-image
+  fi
+  /opt/graalvm/bin/native-image --version
   /opt/graalvm/bin/gu install wasm || true # may not exist for some distributions/dev builds
 
   strip --strip-unneeded \
